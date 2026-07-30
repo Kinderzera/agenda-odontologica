@@ -10,11 +10,11 @@ if (!connectionString) {
   );
 }
 
-// sql(texto, parametros) executa uma query parametrizada e devolve as linhas
+// sql.query(texto, parametros) executa uma query parametrizada e devolve as linhas
 // diretamente (array de objetos) — sem wrapper .rows como no driver `pg`.
 export const sql = neon(connectionString);
 
-await sql(`
+await sql.query(`
   CREATE TABLE IF NOT EXISTS profissionais (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -24,7 +24,7 @@ await sql(`
   )
 `);
 
-await sql(`
+await sql.query(`
   CREATE TABLE IF NOT EXISTS pacientes (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -38,7 +38,7 @@ await sql(`
   )
 `);
 
-await sql(`
+await sql.query(`
   CREATE TABLE IF NOT EXISTS agendamentos (
     id SERIAL PRIMARY KEY,
     paciente_id INTEGER NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
@@ -54,9 +54,9 @@ await sql(`
   )
 `);
 
-await sql('CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos(data)');
+await sql.query('CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos(data)');
 
-await sql(`
+await sql.query(`
   CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     usuario TEXT NOT NULL UNIQUE,
@@ -68,7 +68,7 @@ await sql(`
   )
 `);
 
-await sql(`
+await sql.query(`
   CREATE TABLE IF NOT EXISTS sessoes (
     token TEXT PRIMARY KEY,
     usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -79,21 +79,21 @@ await sql(`
 
 // ---------- Seed inicial (banco novo) ----------
 
-const [{ n: temProfissional }] = await sql('SELECT COUNT(*)::int AS n FROM profissionais');
+const [{ n: temProfissional }] = await sql.query('SELECT COUNT(*)::int AS n FROM profissionais');
 if (temProfissional === 0) {
-  await sql('INSERT INTO profissionais (nome, especialidade, cor) VALUES ($1, $2, $3)', [
+  await sql.query('INSERT INTO profissionais (nome, especialidade, cor) VALUES ($1, $2, $3)', [
     'Dra. Mayra Silva',
     'Cirurgiã-Dentista',
     '#38bdf8',
   ]);
 }
 
-const [{ n: temUsuario }] = await sql('SELECT COUNT(*)::int AS n FROM usuarios');
+const [{ n: temUsuario }] = await sql.query('SELECT COUNT(*)::int AS n FROM usuarios');
 if (temUsuario === 0) {
   const salt = gerarSalt();
   const senhaInicial = process.env.ADMIN_SENHA_INICIAL || crypto.randomBytes(9).toString('base64url');
 
-  await sql('INSERT INTO usuarios (usuario, nome, salt, senha_hash, admin) VALUES ($1, $2, $3, $4, true)', [
+  await sql.query('INSERT INTO usuarios (usuario, nome, salt, senha_hash, admin) VALUES ($1, $2, $3, $4, true)', [
     'admin',
     'Administrador',
     salt,

@@ -26,7 +26,7 @@ function comValorNumerico(linha) {
 }
 
 async function checarConflito({ id, profissional_id, data, hora_inicio, duracao_min }) {
-  const doDia = await sql(
+  const doDia = await sql.query(
     `SELECT * FROM agendamentos
      WHERE data = $1 AND profissional_id = $2 AND status != 'cancelado' AND id != $3`,
     [data, profissional_id, id ?? -1]
@@ -38,13 +38,13 @@ async function checarConflito({ id, profissional_id, data, hora_inicio, duracao_
 // ---------- Profissionais ----------
 
 export async function listarProfissionais(req, res) {
-  res.body = await sql('SELECT * FROM profissionais WHERE ativo = true ORDER BY nome');
+  res.body = await sql.query('SELECT * FROM profissionais WHERE ativo = true ORDER BY nome');
 }
 
 export async function criarProfissional(req, res) {
   const { nome, especialidade = '', cor = '#4f46e5' } = req.json ?? {};
   if (!nome || !nome.trim()) return erro(res, 400, 'Nome é obrigatório.');
-  const linhas = await sql(
+  const linhas = await sql.query(
     'INSERT INTO profissionais (nome, especialidade, cor) VALUES ($1, $2, $3) RETURNING *',
     [nome.trim(), especialidade, cor]
   );
@@ -54,10 +54,10 @@ export async function criarProfissional(req, res) {
 
 export async function atualizarProfissional(req, res, params) {
   const id = Number(params.id);
-  const existente = (await sql('SELECT * FROM profissionais WHERE id = $1', [id]))[0];
+  const existente = (await sql.query('SELECT * FROM profissionais WHERE id = $1', [id]))[0];
   if (!existente) return erro(res, 404, 'Profissional não encontrado.');
   const { nome, especialidade, cor } = req.json ?? {};
-  const linhas = await sql(
+  const linhas = await sql.query(
     'UPDATE profissionais SET nome = $1, especialidade = $2, cor = $3 WHERE id = $4 RETURNING *',
     [nome ?? existente.nome, especialidade ?? existente.especialidade, cor ?? existente.cor, id]
   );
@@ -66,9 +66,9 @@ export async function atualizarProfissional(req, res, params) {
 
 export async function removerProfissional(req, res, params) {
   const id = Number(params.id);
-  const existente = (await sql('SELECT id FROM profissionais WHERE id = $1', [id]))[0];
+  const existente = (await sql.query('SELECT id FROM profissionais WHERE id = $1', [id]))[0];
   if (!existente) return erro(res, 404, 'Profissional não encontrado.');
-  await sql('UPDATE profissionais SET ativo = false WHERE id = $1', [id]);
+  await sql.query('UPDATE profissionais SET ativo = false WHERE id = $1', [id]);
   res.status = 204;
 }
 
@@ -77,16 +77,16 @@ export async function removerProfissional(req, res, params) {
 export async function listarPacientes(req, res, params, query) {
   const busca = (query.busca ?? '').trim();
   if (busca) {
-    res.body = await sql('SELECT * FROM pacientes WHERE nome ILIKE $1 OR telefone ILIKE $1 ORDER BY nome', [
+    res.body = await sql.query('SELECT * FROM pacientes WHERE nome ILIKE $1 OR telefone ILIKE $1 ORDER BY nome', [
       `%${busca}%`,
     ]);
   } else {
-    res.body = await sql('SELECT * FROM pacientes ORDER BY nome');
+    res.body = await sql.query('SELECT * FROM pacientes ORDER BY nome');
   }
 }
 
 export async function obterPaciente(req, res, params) {
-  const paciente = (await sql('SELECT * FROM pacientes WHERE id = $1', [Number(params.id)]))[0];
+  const paciente = (await sql.query('SELECT * FROM pacientes WHERE id = $1', [Number(params.id)]))[0];
   if (!paciente) return erro(res, 404, 'Paciente não encontrado.');
   res.body = paciente;
 }
@@ -102,7 +102,7 @@ export async function criarPaciente(req, res) {
     convenio_nome = '',
   } = req.json ?? {};
   if (!nome || !nome.trim()) return erro(res, 400, 'Nome é obrigatório.');
-  const linhas = await sql(
+  const linhas = await sql.query(
     `INSERT INTO pacientes (nome, telefone, email, data_nascimento, observacoes, tipo_atendimento, convenio_nome)
      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
     [
@@ -121,11 +121,11 @@ export async function criarPaciente(req, res) {
 
 export async function atualizarPaciente(req, res, params) {
   const id = Number(params.id);
-  const existente = (await sql('SELECT * FROM pacientes WHERE id = $1', [id]))[0];
+  const existente = (await sql.query('SELECT * FROM pacientes WHERE id = $1', [id]))[0];
   if (!existente) return erro(res, 404, 'Paciente não encontrado.');
   const dados = req.json ?? {};
   const tipoAtendimento = dados.tipo_atendimento ?? existente.tipo_atendimento;
-  const linhas = await sql(
+  const linhas = await sql.query(
     `UPDATE pacientes SET nome = $1, telefone = $2, email = $3, data_nascimento = $4, observacoes = $5,
        tipo_atendimento = $6, convenio_nome = $7
      WHERE id = $8 RETURNING *`,
@@ -145,9 +145,9 @@ export async function atualizarPaciente(req, res, params) {
 
 export async function removerPaciente(req, res, params) {
   const id = Number(params.id);
-  const existente = (await sql('SELECT id FROM pacientes WHERE id = $1', [id]))[0];
+  const existente = (await sql.query('SELECT id FROM pacientes WHERE id = $1', [id]))[0];
   if (!existente) return erro(res, 404, 'Paciente não encontrado.');
-  await sql('DELETE FROM pacientes WHERE id = $1', [id]);
+  await sql.query('DELETE FROM pacientes WHERE id = $1', [id]);
   res.status = 204;
 }
 
@@ -164,12 +164,12 @@ const SELECT_AGENDAMENTO_JOIN = `
 
 export async function listarAgendamentos(req, res, params, query) {
   if (query.data) {
-    const linhas = await sql(`${SELECT_AGENDAMENTO_JOIN} WHERE a.data = $1 ORDER BY a.hora_inicio`, [query.data]);
+    const linhas = await sql.query(`${SELECT_AGENDAMENTO_JOIN} WHERE a.data = $1 ORDER BY a.hora_inicio`, [query.data]);
     res.body = linhas.map(comValorNumerico);
     return;
   }
   if (query.inicio && query.fim) {
-    const linhas = await sql(
+    const linhas = await sql.query(
       `${SELECT_AGENDAMENTO_JOIN} WHERE a.data BETWEEN $1 AND $2 ORDER BY a.data, a.hora_inicio`,
       [query.inicio, query.fim]
     );
@@ -205,7 +205,7 @@ export async function criarAgendamento(req, res) {
     );
   }
 
-  const inseridos = await sql(
+  const inseridos = await sql.query(
     `INSERT INTO agendamentos
       (paciente_id, profissional_id, data, hora_inicio, duracao_min, procedimento, valor, observacoes, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
@@ -213,12 +213,12 @@ export async function criarAgendamento(req, res) {
   );
 
   res.status = 201;
-  res.body = comValorNumerico((await sql(`${SELECT_AGENDAMENTO_JOIN} WHERE a.id = $1`, [inseridos[0].id]))[0]);
+  res.body = comValorNumerico((await sql.query(`${SELECT_AGENDAMENTO_JOIN} WHERE a.id = $1`, [inseridos[0].id]))[0]);
 }
 
 export async function atualizarAgendamento(req, res, params) {
   const id = Number(params.id);
-  const existente = (await sql('SELECT * FROM agendamentos WHERE id = $1', [id]))[0];
+  const existente = (await sql.query('SELECT * FROM agendamentos WHERE id = $1', [id]))[0];
   if (!existente) return erro(res, 404, 'Agendamento não encontrado.');
   const dados = req.json ?? {};
 
@@ -242,7 +242,7 @@ export async function atualizarAgendamento(req, res, params) {
     }
   }
 
-  await sql(
+  await sql.query(
     `UPDATE agendamentos SET
        paciente_id = $1, profissional_id = $2, data = $3, hora_inicio = $4, duracao_min = $5,
        procedimento = $6, valor = $7, observacoes = $8, status = $9
@@ -261,14 +261,14 @@ export async function atualizarAgendamento(req, res, params) {
     ]
   );
 
-  res.body = comValorNumerico((await sql(`${SELECT_AGENDAMENTO_JOIN} WHERE a.id = $1`, [id]))[0]);
+  res.body = comValorNumerico((await sql.query(`${SELECT_AGENDAMENTO_JOIN} WHERE a.id = $1`, [id]))[0]);
 }
 
 export async function removerAgendamento(req, res, params) {
   const id = Number(params.id);
-  const existente = (await sql('SELECT id FROM agendamentos WHERE id = $1', [id]))[0];
+  const existente = (await sql.query('SELECT id FROM agendamentos WHERE id = $1', [id]))[0];
   if (!existente) return erro(res, 404, 'Agendamento não encontrado.');
-  await sql('DELETE FROM agendamentos WHERE id = $1', [id]);
+  await sql.query('DELETE FROM agendamentos WHERE id = $1', [id]);
   res.status = 204;
 }
 
@@ -278,7 +278,7 @@ export async function listarFechamento(req, res, params, query) {
   const { inicio, fim } = query;
   if (!inicio || !fim) return erro(res, 400, 'Informe "inicio" e "fim".');
 
-  const itens = await sql(
+  const itens = await sql.query(
     `SELECT a.id, a.data, a.hora_inicio, a.procedimento, a.valor, a.status,
             p.nome AS paciente_nome, p.tipo_atendimento AS paciente_tipo_atendimento,
             p.convenio_nome AS paciente_convenio_nome,

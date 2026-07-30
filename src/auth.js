@@ -9,19 +9,19 @@ export const NOME_COOKIE = 'sessao';
 export async function criarSessao(usuarioId) {
   const token = crypto.randomBytes(32).toString('hex');
   const expiraEm = new Date(Date.now() + DURACAO_SESSAO_MS);
-  await sql('INSERT INTO sessoes (token, usuario_id, expira_em) VALUES ($1, $2, $3)', [
+  await sql.query('INSERT INTO sessoes (token, usuario_id, expira_em) VALUES ($1, $2, $3)', [
     token,
     usuarioId,
     expiraEm.toISOString(),
   ]);
   // aproveita para limpar sessões vencidas, sem precisar de um job separado
-  await sql('DELETE FROM sessoes WHERE expira_em < now()');
+  await sql.query('DELETE FROM sessoes WHERE expira_em < now()');
   return token;
 }
 
 export async function usuarioDaSessao(token) {
   if (!token) return null;
-  const linhas = await sql(
+  const linhas = await sql.query(
     `SELECT u.id, u.usuario, u.nome, u.admin
      FROM sessoes s
      JOIN usuarios u ON u.id = s.usuario_id
@@ -33,7 +33,7 @@ export async function usuarioDaSessao(token) {
 
 export async function destruirSessao(token) {
   if (!token) return;
-  await sql('DELETE FROM sessoes WHERE token = $1', [token]);
+  await sql.query('DELETE FROM sessoes WHERE token = $1', [token]);
 }
 
 export function obterCookie(req, nome) {
@@ -57,7 +57,7 @@ function atributosCookie(valor) {
 
 export async function login(req, res) {
   const { usuario = '', senha = '' } = req.json ?? {};
-  const linhas = await sql('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+  const linhas = await sql.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
   const registro = linhas[0];
   if (!registro || !senhaConfere(senha, registro.salt, registro.senha_hash)) {
     res.status = 401;
