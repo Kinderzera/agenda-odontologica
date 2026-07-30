@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
-import { gerarSalt, hashSenha } from './senha.js';
+import { gerarSalt, hashSenha, senhaConfere } from './senha.js';
 
 const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
@@ -109,4 +109,20 @@ if (temUsuario === 0) {
     console.log('  Guarde essa senha agora — ela só aparece aqui, nos logs, uma vez.');
   }
   console.log('');
+} else if (process.env.ADMIN_SENHA_INICIAL) {
+  // Usuário admin já existe: se ADMIN_SENHA_INICIAL foi definida/alterada,
+  // sincroniza a senha dele com o valor da variável (permite redefinir a
+  // senha só trocando essa env var e fazendo redeploy).
+  const [admin] = await sql.query("SELECT * FROM usuarios WHERE usuario = 'admin'");
+  if (admin && !senhaConfere(process.env.ADMIN_SENHA_INICIAL, admin.salt, admin.senha_hash)) {
+    const novoSalt = gerarSalt();
+    await sql.query('UPDATE usuarios SET salt = $1, senha_hash = $2 WHERE id = $3', [
+      novoSalt,
+      hashSenha(process.env.ADMIN_SENHA_INICIAL, novoSalt),
+      admin.id,
+    ]);
+    console.log('');
+    console.log('  Senha do usuário admin atualizada a partir de ADMIN_SENHA_INICIAL.');
+    console.log('');
+  }
 }

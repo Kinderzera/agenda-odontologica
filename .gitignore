@@ -5,3 +5,6 @@ data/*.db-journal
 .env.local
 .vercel
 *.lnk
+
+.vercel
+.env*
