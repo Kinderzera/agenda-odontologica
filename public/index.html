@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#060a10" />
+  <title>Clínica Odontológica Jacupiranga</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <section id="tela-login" class="login">
+    <div class="login__marca" role="img" aria-label="Dra. Mayra Silva, Cirurgiã-Dentista, no consultório da Clínica Odontológica Jacupiranga">
+      <div class="login__marca-fundo"></div>
+      <div class="login__marca-foto"></div>
+      <div class="login__marca-texto">
+        <div class="login__logo"><img class="logo-icone" src="assets/logo.png" alt="Logo da Clínica Odontológica Jacupiranga" /> <span>Clínica Odontológica Jacupiranga</span></div>
+        <h1 class="login__titulo">Clínica Odontológica Jacupiranga</h1>
+        <p class="login__subtitulo">Consultas · Pacientes · Profissionais</p>
+      </div>
+    </div>
+
+    <div class="login__painel">
+      <form id="form-login" class="login__form">
+        <div class="campo">
+          <label>USUÁRIO</label>
+          <div class="campo-icone">
+            <span class="icone">👤</span>
+            <input type="text" name="usuario" autocomplete="username" required autofocus />
+          </div>
+        </div>
+        <div class="campo">
+          <label>SENHA</label>
+          <div class="campo-icone">
+            <span class="icone">🔒</span>
+            <input type="password" name="senha" autocomplete="current-password" required id="campo-senha" />
+            <button type="button" class="botao-olho" id="btn-mostrar-senha" aria-label="Mostrar senha">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-entrar">ENTRAR →</button>
+        <p class="login__rodape">Uso interno do consultório</p>
+      </form>
+    </div>
+  </section>
+
+  <div id="app-shell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="sidebar__brand"><img class="logo-icone" src="assets/logo.png" alt="Logo da Clínica Odontológica Jacupiranga" /> <span>Clínica Jacupiranga</span></div>
+      <nav class="tabs" id="tabs">
+        <button class="tabs__btn is-active" data-view="agenda"><span class="tabs__icone">📅</span> Agenda</button>
+        <button class="tabs__btn" data-view="pacientes"><span class="tabs__icone">🧑‍🤝‍🧑</span> Pacientes</button>
+        <button class="tabs__btn" data-view="profissionais"><span class="tabs__icone">🩺</span> Profissionais</button>
+        <button class="tabs__btn" data-view="fechamento" id="tab-fechamento" hidden><span class="tabs__icone">💰</span> Fechamento</button>
+      </nav>
+      <div class="sidebar__usuario">
+        <span id="nome-usuario"></span>
+        <button class="btn-sair" id="btn-sair" title="Sair" aria-label="Sair">⏻</button>
+      </div>
+    </aside>
+
+    <main id="app" class="app"></main>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

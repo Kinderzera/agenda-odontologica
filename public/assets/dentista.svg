@@ -1,0 +1,94 @@
+<svg viewBox="0 0 440 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustração de uma dentista de pé segurando um espelho odontológico ao lado de um dente estilizado">
+  <defs>
+    <linearGradient id="toothGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d8ecf5"/>
+    </linearGradient>
+    <linearGradient id="coatGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#dde7ef"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#22aad4" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#22aad4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- glow backdrop -->
+  <circle cx="230" cy="230" r="230" fill="url(#glow)"/>
+
+  <!-- floor shadow -->
+  <ellipse cx="185" cy="537" rx="118" ry="14" fill="#000000" opacity="0.32"/>
+
+  <!-- giant stylized tooth, upper right -->
+  <g transform="translate(255,40)">
+    <path d="M60,0
+             C20,0 0,26 0,58
+             C0,92 12,150 24,190
+             C29,207 45,207 49,190
+             C53,175 58,158 60,158
+             C62,158 67,175 71,190
+             C75,207 91,207 96,190
+             C108,150 120,92 120,58
+             C120,26 100,0 60,0 Z"
+          fill="url(#toothGrad)" stroke="#9fc3d6" stroke-width="3"/>
+    <!-- sparkles -->
+    <path d="M14,18 L19,30 L31,35 L19,40 L14,52 L9,40 L-3,35 L9,30 Z" fill="#4fd8f0"/>
+    <circle cx="98" cy="55" r="5" fill="#4fd8f0"/>
+  </g>
+
+  <!-- ================= FIGURE ================= -->
+  <g>
+    <!-- back hair -->
+    <path d="M141,74 C141,38 161,14 191,14 C221,14 241,38 241,74 L241,114 C241,133 232,142 223,142 L159,142 C150,142 141,133 141,114 Z" fill="#2c2333"/>
+
+    <!-- neck -->
+    <rect x="177" y="112" width="28" height="24" rx="10" fill="#e7b58c"/>
+
+    <!-- left arm (down at side), drawn before coat so shoulder seam is clean -->
+    <line x1="152" y1="168" x2="116" y2="300" stroke="#f4f8fb" stroke-width="30" stroke-linecap="round"/>
+    <circle cx="112" cy="308" r="16" fill="#e7b58c"/>
+
+    <!-- right arm, bent up presenting the mirror toward the tooth -->
+    <line x1="228" y1="166" x2="266" y2="122" stroke="#f4f8fb" stroke-width="30" stroke-linecap="round"/>
+    <line x1="266" y1="122" x2="302" y2="92" stroke="#f4f8fb" stroke-width="26" stroke-linecap="round"/>
+    <circle cx="308" cy="86" r="15" fill="#e7b58c"/>
+    <!-- dental mirror tool -->
+    <line x1="310" y1="80" x2="322" y2="48" stroke="#9fb3c8" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="324" cy="42" r="12" fill="#eafbff" stroke="#9fb3c8" stroke-width="2"/>
+
+    <!-- coat body (waist length, so more leg shows) -->
+    <path d="M158,148 C151,148 141,166 138,196 L127,340 C162,358 220,358 255,340 L244,196 C241,166 231,148 224,148
+             C220,176 200,190 191,190 C182,190 162,176 158,148 Z" fill="url(#coatGrad)" stroke="#c7d5e0" stroke-width="2"/>
+
+    <!-- scrub v-neck -->
+    <path d="M174,150 L208,150 L199,222 L183,222 Z" fill="#1c93b8"/>
+
+    <!-- coat pocket badge -->
+    <circle cx="154" cy="256" r="12" fill="#22aad4"/>
+    <path d="M154,250 v12 M148,256 h12" stroke="#eafbff" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- legs -->
+    <rect x="155" y="330" width="32" height="180" rx="15" fill="#16222e"/>
+    <rect x="199" y="330" width="32" height="180" rx="15" fill="#16222e"/>
+    <!-- shoes -->
+    <path d="M150,498 h42 c8,0 13,6 13,11 v6 h-63 v-6 c0,-7 4,-11 8,-11 Z" fill="#0d1520"/>
+    <path d="M197,498 h42 c8,0 13,6 13,11 v6 h-63 v-6 c0,-7 4,-11 8,-11 Z" fill="#0d1520"/>
+
+    <!-- front hair strands -->
+    <path d="M143,86 C141,56 161,24 191,24 C221,24 241,56 239,86 C233,62 213,46 191,46 C169,46 149,62 143,86 Z" fill="#352a3d"/>
+
+    <!-- head -->
+    <circle cx="191" cy="96" r="44" fill="#f0c39a"/>
+
+    <!-- face -->
+    <circle cx="177" cy="96" r="4" fill="#3a2b2b"/>
+    <circle cx="205" cy="96" r="4" fill="#3a2b2b"/>
+    <path d="M179,114 Q191,123 203,114" stroke="#a9633f" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M169,86 Q177,80 185,85" stroke="#352a3d" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M197,85 Q205,80 213,86" stroke="#352a3d" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- headband -->
+    <path d="M147,80 C153,50 169,34 191,34 C213,34 229,50 235,80" stroke="#22aad4" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
