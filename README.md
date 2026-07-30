@@ -1,51 +1,71 @@
 # Clínica Odontológica Jacupiranga — Agenda
 
-Sistema de agendamento para a Clínica Odontológica Jacupiranga. Roda
-localmente na sua máquina e é acessível também pelo celular (mesma rede Wi-Fi).
+Sistema de agendamento para a Clínica Odontológica Jacupiranga. Feito para
+rodar no Vercel, com banco de dados Postgres na nuvem — acessível de
+qualquer lugar, não só na rede Wi-Fi de casa.
 
 ## Como funciona
 
-- **Backend**: Node.js puro (sem dependências de terceiros) usando o módulo
-  `node:sqlite` embutido no Node — não precisa de `npm install`.
+- **Backend**: Node.js (funções serverless no Vercel; `http` puro localmente).
 - **Frontend**: HTML/CSS/JS puro, responsivo (funciona em computador e celular).
-- **Banco de dados**: arquivo local em `data/agenda.db` (criado automaticamente
-  no primeiro uso).
+- **Banco de dados**: Postgres (Neon), conectado ao projeto pelo painel do
+  Vercel — os dados ficam na nuvem, com backup e conexão criptografada.
+- **Sessão de login**: guardada numa tabela no próprio banco (não se perde
+  se o servidor reiniciar, e dá pra derrubar uma sessão específica).
 
-## Como iniciar
+## Publicar no Vercel (primeira vez)
 
-Dê duplo clique no atalho **"Agenda Odontologica"** na Área de Trabalho.
+Alguns passos só o dono da conta consegue fazer (não tenho acesso ao seu
+GitHub/Vercel):
 
-Isso sobe o servidor em segundo plano (sem abrir janela de terminal) e já
-abre a agenda no navegador sozinho, em `http://localhost:3000`. Não precisa
-mexer em terminal nenhum.
+1. **Criar um repositório no GitHub** (vazio) para este projeto.
+2. Direto desta pasta, me avise para eu conectar o remoto e dar `git push`
+   (o commit inicial já está pronto localmente).
+3. No painel do **Vercel** → "Add New Project" → importar esse repositório.
+4. Ainda no painel do Vercel, aba **Storage** → criar um banco **Postgres**
+   e conectar a este projeto. Isso injeta a variável `DATABASE_URL`
+   automaticamente — não precisa configurar nada manualmente.
+5. (Opcional, recomendado) Antes do primeiro deploy, adicione a variável de
+   ambiente `ADMIN_SENHA_INICIAL` no projeto do Vercel com a senha que você
+   quiser para o login `admin`. Se pular esse passo, o sistema gera uma
+   senha aleatória forte e mostra nos **Logs** do Vercel (Deployments → a
+   última → Logs) — só aparece essa vez, guarde na hora.
+6. Deploy automático a partir daí. Atualizações futuras: só `git push`.
 
-O servidor fica rodando escondido em segundo plano — pode fechar a aba do
-navegador e reabrir quando quiser (`http://localhost:3000`) que ele continua
-no ar. Se reiniciar o computador, é só clicar no atalho de novo.
+## Rodar localmente (para testar antes de publicar)
 
-Para acessar pelo **celular**, com o celular na mesma rede Wi-Fi deste
-computador, abra no navegador do celular o endereço `http://SEU-IP:3000`
-(esse IP aparece se você abrir o arquivo `iniciar.bat` — veja abaixo).
+Como o banco agora é na nuvem, mesmo rodando local o app precisa da conexão
+com o Postgres:
 
-<details>
-<summary>Modo avançado / diagnóstico (com terminal)</summary>
+1. Instale a [Vercel CLI](https://vercel.com/docs/cli) (já instalada aqui) e
+   rode `vercel login` uma vez.
+2. Na pasta do projeto: `vercel link` (conecta esta pasta ao projeto no
+   Vercel) e depois `vercel env pull .env.local` (baixa a `DATABASE_URL`
+   real para um arquivo local — nunca vai pro GitHub, já está no
+   `.gitignore`).
+3. Dê duplo clique no atalho **"Agenda Odontologica"** na Área de Trabalho
+   (ou rode `npm start`). Abre sozinho em `http://localhost:3000`.
 
-Se precisar ver os logs do servidor ou descobrir o IP para acesso pelo
-celular, dê duplo clique em `iniciar.bat` em vez do atalho — ele abre um
-terminal mostrando os endereços disponíveis. Feche a janela para parar essa
-instância do servidor.
+Sem o `.env.local` preenchido, o atalho avisa o que falta em vez de travar
+sem explicação.
 
-</details>
+## Segurança
+
+- Senhas de usuário: hash com `scrypt` + salt único por pessoa (nunca fica
+  em texto puro em lugar nenhum).
+- Sessão: token aleatório de 32 bytes, cookie `HttpOnly` (não acessível por
+  JavaScript), `Secure` quando publicado (só trafega por HTTPS), expira em
+  30 dias ou no logout.
+- Conexão com o banco: criptografada (TLS), string de conexão nunca vai pro
+  repositório — sempre por variável de ambiente.
+- Aba **Fechamento** (valores dos atendimentos): bloqueada tanto na tela
+  quanto na API para quem não é administrador.
 
 ## Login
 
-Login padrão criado automaticamente na primeira execução:
-
 - **Usuário:** `admin`
-- **Senha:** `admin123`
-
-Recomendado trocar depois (por enquanto a troca de senha precisa ser feita
-direto no banco — posso adicionar uma tela para isso quando quiser).
+- **Senha:** definida em `ADMIN_SENHA_INICIAL` no deploy, ou gerada
+  automaticamente e mostrada uma única vez nos logs (veja acima).
 
 ## O que já está pronto
 
@@ -75,13 +95,5 @@ segundo usuário pela interface (por enquanto seria direto no banco).
 - Histórico de atendimentos por paciente (prontuário simples).
 - Tela para gerenciar usuários (criar login da recepção, trocar senha).
 - Lembretes automáticos (WhatsApp/SMS) — exigiria integração externa.
-- Publicar online (ex.: Vercel) quando quiser acesso fora da rede local —
-  nesse caso o banco SQLite local precisaria trocar por um banco na nuvem.
-
-## Observação sobre a pasta
-
-Esta pasta está dentro do OneDrive (Área de Trabalho sincronizada). Isso é ok
-para os arquivos de código, mas o arquivo de banco de dados (`data/agenda.db`)
-fica mudando toda hora enquanto o sistema é usado — o OneDrive vai tentar
-sincronizá-lo constantemente. Se notar lentidão ou conflitos de sincronização,
-me avise que a gente move a pasta `data/` para fora do OneDrive.
+- Domínio próprio no Vercel (ex.: agenda.clinicajacupiranga.com.br) em vez
+  do endereço padrão `*.vercel.app`.
