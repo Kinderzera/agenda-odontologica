@@ -1,8 +1,9 @@
 # Clínica Odontológica Jacupiranga — Agenda
 
-Sistema de agendamento para a Clínica Odontológica Jacupiranga. Feito para
-rodar no Vercel, com banco de dados Postgres na nuvem — acessível de
-qualquer lugar, não só na rede Wi-Fi de casa.
+Sistema de agendamento para a Clínica Odontológica Jacupiranga. No ar em
+**https://agendaodontologica.vercel.app** — acessível de qualquer lugar,
+não só na rede Wi-Fi de casa. Repositório:
+`github.com/Kinderzera/agenda-odontologica`.
 
 ## Como funciona
 
@@ -13,24 +14,16 @@ qualquer lugar, não só na rede Wi-Fi de casa.
 - **Sessão de login**: guardada numa tabela no próprio banco (não se perde
   se o servidor reiniciar, e dá pra derrubar uma sessão específica).
 
-## Publicar no Vercel (primeira vez)
+## Deploy
 
-Alguns passos só o dono da conta consegue fazer (não tenho acesso ao seu
-GitHub/Vercel):
+Já publicado — projeto `agenda-odontologica` no Vercel (workspace "Sobras
+Reoperação", conta GitHub `Kinderzera`), com banco Postgres (Neon)
+conectado. Atualizações futuras: só `git push` na branch `main`, o Vercel
+faz o deploy automático.
 
-1. **Criar um repositório no GitHub** (vazio) para este projeto.
-2. Direto desta pasta, me avise para eu conectar o remoto e dar `git push`
-   (o commit inicial já está pronto localmente).
-3. No painel do **Vercel** → "Add New Project" → importar esse repositório.
-4. Ainda no painel do Vercel, aba **Storage** → criar um banco **Postgres**
-   e conectar a este projeto. Isso injeta a variável `DATABASE_URL`
-   automaticamente — não precisa configurar nada manualmente.
-5. (Opcional, recomendado) Antes do primeiro deploy, adicione a variável de
-   ambiente `ADMIN_SENHA_INICIAL` no projeto do Vercel com a senha que você
-   quiser para o login `admin`. Se pular esse passo, o sistema gera uma
-   senha aleatória forte e mostra nos **Logs** do Vercel (Deployments → a
-   última → Logs) — só aparece essa vez, guarde na hora.
-6. Deploy automático a partir daí. Atualizações futuras: só `git push`.
+Se a senha do `admin` não foi definida via `ADMIN_SENHA_INICIAL` antes do
+banco ser criado, ela foi gerada automaticamente e mostrada uma única vez
+nos **Logs** do Vercel (procure por "Usuário administrador criado").
 
 ## Rodar localmente (para testar antes de publicar)
 
@@ -95,5 +88,5 @@ segundo usuário pela interface (por enquanto seria direto no banco).
 - Histórico de atendimentos por paciente (prontuário simples).
 - Tela para gerenciar usuários (criar login da recepção, trocar senha).
 - Lembretes automáticos (WhatsApp/SMS) — exigiria integração externa.
-- Domínio próprio no Vercel (ex.: agenda.clinicajacupiranga.com.br) em vez
-  do endereço padrão `*.vercel.app`.
+- Domínio próprio (ex.: agenda.clinicajacupiranga.com.br) em vez do
+  `*.vercel.app`.
