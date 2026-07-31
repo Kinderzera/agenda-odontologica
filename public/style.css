@@ -579,16 +579,14 @@ button, input, select, textarea {
 .dia-detalhe__hora small { color: var(--texto-suave); font-weight: 500; font-size: 11px; }
 
 .dia-detalhe__info { flex: 1; min-width: 0; }
+.dia-detalhe__paciente-linha {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .dia-detalhe__paciente { font-weight: 700; color: #fff; font-size: 15px; }
 .dia-detalhe__meta { font-size: 12.5px; color: var(--texto-suave); margin-top: 3px; }
-
-.dia-detalhe__acoes {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
 
 .btn-remarcar {
   border: 1px solid var(--borda);
@@ -1102,6 +1100,9 @@ button, input, select, textarea {
   .dia-mes__numero { font-size: 11px; }
   .dia-mes__contagem { display: none; }
   .calendario-mes__cabecalho { font-size: 9px; padding: 6px 2px; }
+
+  .dia-detalhe__item { gap: 10px; padding: 12px; }
+  .dia-detalhe__hora { width: 46px; padding-right: 10px; }
 }
 
 @media (min-width: 860px) {

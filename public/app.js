@@ -406,23 +406,23 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia, bloqueiosDoDia = []) {
           <small>${ag.duracao_min}min</small>
         </div>
         <div class="dia-detalhe__info">
-          <div class="dia-detalhe__paciente">${escapeHtml(ag.paciente_nome)}</div>
+          <div class="dia-detalhe__paciente-linha">
+            <span class="dia-detalhe__paciente">${escapeHtml(ag.paciente_nome)}</span>
+            <span class="badge badge-${ag.status}">${STATUS_LABEL[ag.status]}</span>
+          </div>
           <div class="dia-detalhe__meta">${escapeHtml(ag.procedimento || 'Sem procedimento definido')} · ${escapeHtml(ag.profissional_nome)}</div>
           <div class="dia-detalhe__meta">
             ${ag.valor ? formatarMoeda(ag.valor) + ' · ' : ''}${ehConvenio ? 'Convênio' + (ag.paciente_convenio_nome ? ' (' + escapeHtml(ag.paciente_convenio_nome) + ')' : '') : 'Particular'}
           </div>
         </div>
-        <div class="dia-detalhe__acoes">
-          <span class="badge badge-${ag.status}">${STATUS_LABEL[ag.status]}</span>
-          <button type="button" class="btn-remarcar" title="Remarcar para outro dia" aria-label="Remarcar para outro dia">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 12a9 9 0 0 1 15.36-6.36L21 8" />
-              <polyline points="21 3 21 8 16 8" />
-              <path d="M21 12a9 9 0 0 1-15.36 6.36L3 16" />
-              <polyline points="3 21 3 16 8 16" />
-            </svg>
-          </button>
-        </div>
+        <button type="button" class="btn-remarcar" title="Remarcar para outro dia" aria-label="Remarcar para outro dia">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 0 1 15.36-6.36L21 8" />
+            <polyline points="21 3 21 8 16 8" />
+            <path d="M21 12a9 9 0 0 1-15.36 6.36L3 16" />
+            <polyline points="3 21 3 16 8 16" />
+          </svg>
+        </button>
       `;
       item.onclick = () => abrirModalAgendamento(ag);
       item.querySelector('.btn-remarcar').onclick = (e) => {
