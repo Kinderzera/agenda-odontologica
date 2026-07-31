@@ -506,6 +506,18 @@ function normalizarBusca(str) {
   return (str || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
 
+function gerarHorariosPadrao(passoMin = 15, inicio = '07:00', fim = '20:45') {
+  const [h0, m0] = inicio.split(':').map(Number);
+  const [h1, m1] = fim.split(':').map(Number);
+  const lista = [];
+  for (let min = h0 * 60 + m0; min <= h1 * 60 + m1; min += passoMin) {
+    lista.push(`${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`);
+  }
+  return lista;
+}
+
+const HORARIOS_PADRAO = gerarHorariosPadrao();
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
@@ -575,7 +587,22 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
       </div>
       <div class="campo">
         <label>Hora</label>
-        <input type="time" name="hora_inicio" value="${agendamento?.hora_inicio?.slice(0, 5) || horaSugerida || '08:00'}" required />
+        <div class="autocomplete" id="autocomplete-hora">
+          <input
+            type="text"
+            name="hora_inicio"
+            id="input-hora-agendamento"
+            placeholder="Ex: 14:00"
+            inputmode="numeric"
+            maxlength="5"
+            pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+            title="Use o formato HH:MM"
+            autocomplete="off"
+            value="${agendamento?.hora_inicio?.slice(0, 5) || horaSugerida || '08:00'}"
+            required
+          />
+          <div class="autocomplete__lista" id="lista-autocomplete-hora" hidden></div>
+        </div>
       </div>
     </div>
     <div class="linha-campos">
@@ -684,6 +711,61 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
   listaAutocomplete.addEventListener('mousedown', (e) => e.preventDefault());
   inputBuscaPaciente.addEventListener('blur', () => {
     listaAutocomplete.hidden = true;
+  });
+
+  const inputHora = form.querySelector('#input-hora-agendamento');
+  const listaHoras = form.querySelector('#lista-autocomplete-hora');
+  let indiceAtivoHora = -1;
+
+  function renderizarListaHoras(filtro) {
+    const termo = (filtro || '').replace(/[^0-9:]/g, '');
+    const resultados = (termo ? HORARIOS_PADRAO.filter((h) => h.startsWith(termo)) : HORARIOS_PADRAO).slice(0, 8);
+
+    indiceAtivoHora = -1;
+    listaHoras.innerHTML =
+      resultados.length === 0
+        ? '<div class="autocomplete__vazio">Nenhum horário encontrado.</div>'
+        : resultados.map((h) => `<div class="autocomplete__item">${h}</div>`).join('');
+
+    const itens = listaHoras.querySelectorAll('.autocomplete__item');
+    itens.forEach((item, i) => {
+      item.onclick = () => {
+        inputHora.value = resultados[i];
+        listaHoras.hidden = true;
+      };
+    });
+    listaHoras.hidden = false;
+  }
+
+  function destacarItemHora() {
+    const itens = [...listaHoras.querySelectorAll('.autocomplete__item')];
+    itens.forEach((item, i) => item.classList.toggle('is-ativo', i === indiceAtivoHora));
+    itens[indiceAtivoHora]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  inputHora.addEventListener('input', () => renderizarListaHoras(inputHora.value));
+  inputHora.addEventListener('focus', () => renderizarListaHoras(inputHora.value));
+  inputHora.addEventListener('keydown', (e) => {
+    const itens = listaHoras.querySelectorAll('.autocomplete__item');
+    if (listaHoras.hidden || itens.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      indiceAtivoHora = Math.min(indiceAtivoHora + 1, itens.length - 1);
+      destacarItemHora();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      indiceAtivoHora = Math.max(indiceAtivoHora - 1, 0);
+      destacarItemHora();
+    } else if (e.key === 'Enter' && indiceAtivoHora >= 0) {
+      e.preventDefault();
+      itens[indiceAtivoHora].click();
+    } else if (e.key === 'Escape') {
+      listaHoras.hidden = true;
+    }
+  });
+  listaHoras.addEventListener('mousedown', (e) => e.preventDefault());
+  inputHora.addEventListener('blur', () => {
+    listaHoras.hidden = true;
   });
 
   form.querySelector('#btn-novo-paciente-inline').onclick = () => {
