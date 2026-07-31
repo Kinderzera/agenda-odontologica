@@ -612,6 +612,20 @@ const HORARIOS_PADRAO = gerarHorariosPadrao();
 
 const DIAS_SEMANA_MINI = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
+// Posiciona um painel flutuante (position: fixed) logo abaixo de um input,
+// usando coordenadas de tela — assim ele nunca fica cortado pelo scroll
+// interno do modal, diferente de position: absolute dentro de um container
+// com overflow. Se larguraFixa não for informada, o painel acompanha a
+// largura do próprio input.
+function posicionarFlutuante(input, painel, larguraFixa) {
+  const rect = input.getBoundingClientRect();
+  const largura = larguraFixa || rect.width;
+  const esquerda = Math.min(rect.left, window.innerWidth - largura - 8);
+  painel.style.width = `${largura}px`;
+  painel.style.top = `${rect.bottom + 6}px`;
+  painel.style.left = `${Math.max(8, esquerda)}px`;
+}
+
 function configurarSeletorData(inputTexto, inputOculto, calendario, { bloquearFimDeSemana = false } = {}) {
   let mesAtual = new Date(inputOculto.value ? inputOculto.value + 'T00:00:00' : new Date());
   mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth(), 1);
@@ -667,18 +681,10 @@ function configurarSeletorData(inputTexto, inputOculto, calendario, { bloquearFi
     }
   }
 
-  function posicionar() {
-    const rect = inputTexto.getBoundingClientRect();
-    const largura = calendario.offsetWidth || 268;
-    const esquerda = Math.min(rect.left, window.innerWidth - largura - 8);
-    calendario.style.top = `${rect.bottom + 6}px`;
-    calendario.style.left = `${Math.max(8, esquerda)}px`;
-  }
-
   inputTexto.addEventListener('click', () => {
     renderizar();
     calendario.hidden = false;
-    posicionar();
+    posicionarFlutuante(inputTexto, calendario, 268);
   });
   calendario.addEventListener('mousedown', (e) => e.preventDefault());
   inputTexto.addEventListener('blur', () => {
@@ -707,6 +713,7 @@ function configurarSeletorHora(inputHora, listaHoras) {
       };
     });
     listaHoras.hidden = false;
+    posicionarFlutuante(inputHora, listaHoras);
   }
 
   function destacar() {
@@ -895,6 +902,7 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
       item.onclick = () => selecionarPaciente(resultados.find((p) => p.id === Number(item.dataset.id)));
     }
     listaAutocomplete.hidden = false;
+    posicionarFlutuante(inputBuscaPaciente, listaAutocomplete);
   }
 
   function selecionarPaciente(paciente) {

@@ -923,11 +923,8 @@ button, input, select, textarea {
 }
 
 .autocomplete__lista {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 5;
+  position: fixed;
+  z-index: 200;
   background: var(--card-alt);
   border: 1px solid var(--borda);
   border-radius: 10px;
