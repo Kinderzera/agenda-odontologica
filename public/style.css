@@ -119,8 +119,15 @@ button, input, select, textarea {
   letter-spacing: 0.2px;
   font-weight: 700;
   line-height: 1.25;
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   color: #fff;
+}
+
+.login__subtitulo {
+  color: var(--texto-suave);
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .login__painel {
@@ -1153,6 +1160,7 @@ button, input, select, textarea {
   .login__logo { top: 28px; left: 6vw; }
   .login__marca-texto { max-width: 380px; }
   .login__titulo { font-size: clamp(24px, 2vw, 30px); }
+  .login__subtitulo { font-size: 14px; }
 
   .login__painel {
     flex: 1 1 50%;
