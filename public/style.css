@@ -698,7 +698,14 @@ button, input, select, textarea {
   max-height: 92vh;
   overflow-y: auto;
   box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.45);
+  scrollbar-width: thin;
+  scrollbar-color: var(--borda) transparent;
 }
+
+.modal::-webkit-scrollbar { width: 7px; }
+.modal::-webkit-scrollbar-track { background: transparent; }
+.modal::-webkit-scrollbar-thumb { background: var(--borda); border-radius: 999px; }
+.modal::-webkit-scrollbar-thumb:hover { background: var(--azul-escuro); }
 
 .modal::before {
   content: '';
@@ -912,15 +919,24 @@ button, input, select, textarea {
     padding-top: 14px;
   }
 
-  .modal-fundo { align-items: center; padding: 24px; }
+  .modal-fundo { align-items: center; padding: 16px; }
   .modal {
     border-radius: 20px;
     padding: 28px 30px 30px;
-    max-height: 86vh;
+    max-height: 94vh;
   }
   .modal::before { border-radius: 20px 20px 0 0; }
   .modal--agenda-dia { max-width: 640px; }
-  .modal--formulario { max-width: 660px; }
+
+  .modal--formulario {
+    max-width: 660px;
+    padding: 22px 30px 24px;
+  }
+  .modal--formulario .modal__cabecalho { margin-bottom: 12px; padding-bottom: 12px; }
+  .modal--formulario .campo { margin-bottom: 10px; }
+  .modal--formulario .linha-campos { gap: 18px; }
+  .modal--formulario .campo textarea { min-height: 44px; }
+  .modal--formulario .modal__acoes { margin-top: 12px; }
   .dia-mes { min-height: 118px; padding: 10px 12px; }
   .dia-mes__numero { font-size: 14px; }
   .calendario-mes__cabecalho { padding: 14px 4px; font-size: 12px; }
