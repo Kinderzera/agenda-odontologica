@@ -598,7 +598,7 @@ function normalizarBusca(str) {
   return (str || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
 
-function gerarHorariosPadrao(passoMin = 15, inicio = '07:00', fim = '20:45') {
+function gerarHorariosPadrao(passoMin = 15, inicio = '09:00', fim = '17:30') {
   const [h0, m0] = inicio.split(':').map(Number);
   const [h1, m1] = fim.split(':').map(Number);
   const lista = [];

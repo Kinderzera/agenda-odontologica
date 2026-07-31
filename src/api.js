@@ -40,6 +40,15 @@ function ehFimDeSemana(data) {
   return diaSemana === 0 || diaSemana === 6;
 }
 
+const ABERTURA_MIN = minutos('09:00');
+const FECHAMENTO_MIN = minutos('17:30');
+
+function dentroDoHorarioComercial(hora_inicio, duracao_min) {
+  const inicio = minutos(hora_inicio);
+  const fim = inicio + Number(duracao_min);
+  return inicio >= ABERTURA_MIN && fim <= FECHAMENTO_MIN;
+}
+
 async function checarBloqueio(profissional_id, data) {
   const linhas = await sql.query('SELECT * FROM bloqueios WHERE profissional_id = $1 AND data = $2', [
     profissional_id,
@@ -213,6 +222,10 @@ export async function criarAgendamento(req, res) {
     return erro(res, 400, 'A clínica não atende aos sábados e domingos.');
   }
 
+  if (!dentroDoHorarioComercial(hora_inicio, duracao_min)) {
+    return erro(res, 400, 'A clínica atende das 09:00 às 17:30.');
+  }
+
   const bloqueio = await checarBloqueio(profissional_id, data);
   if (bloqueio) {
     return erro(res, 409, `Este profissional está com o dia ${data} bloqueado${bloqueio.motivo ? ` (${bloqueio.motivo})` : ''}.`);
@@ -254,6 +267,8 @@ export async function atualizarAgendamento(req, res, params) {
   };
 
   const remarcado = candidato.data !== existente.data || candidato.profissional_id !== existente.profissional_id;
+  const horarioAlterado =
+    candidato.hora_inicio !== existente.hora_inicio || candidato.duracao_min !== existente.duracao_min;
 
   if (dados.status !== 'cancelado') {
     if (remarcado) {
@@ -269,6 +284,10 @@ export async function atualizarAgendamento(req, res, params) {
           `Este profissional está com o dia ${candidato.data} bloqueado${bloqueio.motivo ? ` (${bloqueio.motivo})` : ''}.`
         );
       }
+    }
+
+    if ((remarcado || horarioAlterado) && !dentroDoHorarioComercial(candidato.hora_inicio, candidato.duracao_min)) {
+      return erro(res, 400, 'A clínica atende das 09:00 às 17:30.');
     }
 
     const conflito = await checarConflito(candidato);
