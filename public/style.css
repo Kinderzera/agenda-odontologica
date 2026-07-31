@@ -895,6 +895,24 @@ button, input, select, textarea {
   color: var(--texto-suave);
   margin-bottom: 6px;
 }
+
+.campo-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+  cursor: pointer;
+}
+.campo-checkbox input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--azul);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.campo-checkbox input[type="checkbox"]:disabled { cursor: not-allowed; }
 .campo input, .campo select, .campo textarea {
   width: 100%;
   padding: 10px 12px;

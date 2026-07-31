@@ -1,4 +1,5 @@
 import { sql } from './db.js';
+import { gerarSalt, hashSenha } from './senha.js';
 
 function erro(res, status, mensagem) {
   res.status = status;
@@ -374,6 +375,10 @@ export async function removerBloqueio(req, res, params) {
 // ---------- Fechamento (somente administrador) ----------
 
 export async function listarFechamento(req, res, params, query) {
+  if (!req.usuario.admin && !req.usuario.pode_ver_fechamento) {
+    return erro(res, 403, 'Acesso restrito.');
+  }
+
   const { inicio, fim } = query;
   if (!inicio || !fim) return erro(res, 400, 'Informe "inicio" e "fim".');
 
@@ -426,4 +431,89 @@ export async function listarFechamento(req, res, params, query) {
   resumo.porProfissional = [...profissionaisMap.values()].sort((a, b) => b.total - a.total);
 
   res.body = { itens: itens.map(comValorNumerico), resumo };
+}
+
+// ---------- Usuários (login) — somente administrador ----------
+
+const SELECT_USUARIO_SEGURO = 'id, usuario, nome, admin, pode_ver_fechamento, criado_em';
+
+export async function listarUsuarios(req, res) {
+  res.body = await sql.query(`SELECT ${SELECT_USUARIO_SEGURO} FROM usuarios ORDER BY nome`);
+}
+
+export async function criarUsuario(req, res) {
+  const { usuario = '', nome = '', senha = '', admin = false, pode_ver_fechamento = false } = req.json ?? {};
+
+  if (!usuario.trim() || !nome.trim() || !senha) {
+    return erro(res, 400, 'Usuário, nome e senha são obrigatórios.');
+  }
+  if (senha.length < 6) {
+    return erro(res, 400, 'A senha precisa ter pelo menos 6 caracteres.');
+  }
+
+  const existente = await sql.query('SELECT id FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+  if (existente[0]) return erro(res, 409, 'Já existe um usuário com esse login.');
+
+  const salt = gerarSalt();
+  const linhas = await sql.query(
+    `INSERT INTO usuarios (usuario, nome, salt, senha_hash, admin, pode_ver_fechamento)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING ${SELECT_USUARIO_SEGURO}`,
+    [usuario.trim(), nome.trim(), salt, hashSenha(senha, salt), !!admin, !!pode_ver_fechamento]
+  );
+  res.status = 201;
+  res.body = linhas[0];
+}
+
+export async function atualizarUsuario(req, res, params) {
+  const id = Number(params.id);
+  const existente = (await sql.query('SELECT * FROM usuarios WHERE id = $1', [id]))[0];
+  if (!existente) return erro(res, 404, 'Usuário não encontrado.');
+
+  const dados = req.json ?? {};
+
+  if (id === req.usuario.id && dados.admin === false) {
+    return erro(res, 400, 'Você não pode remover seu próprio acesso de administrador.');
+  }
+
+  if (dados.usuario && dados.usuario.trim() !== existente.usuario) {
+    const duplicado = await sql.query('SELECT id FROM usuarios WHERE usuario = $1 AND id != $2', [
+      dados.usuario.trim(),
+      id,
+    ]);
+    if (duplicado[0]) return erro(res, 409, 'Já existe um usuário com esse login.');
+  }
+
+  let salt = existente.salt;
+  let senhaHash = existente.senha_hash;
+  if (dados.senha) {
+    if (dados.senha.length < 6) return erro(res, 400, 'A senha precisa ter pelo menos 6 caracteres.');
+    salt = gerarSalt();
+    senhaHash = hashSenha(dados.senha, salt);
+  }
+
+  const linhas = await sql.query(
+    `UPDATE usuarios SET usuario = $1, nome = $2, admin = $3, pode_ver_fechamento = $4, salt = $5, senha_hash = $6
+     WHERE id = $7 RETURNING ${SELECT_USUARIO_SEGURO}`,
+    [
+      dados.usuario ? dados.usuario.trim() : existente.usuario,
+      dados.nome !== undefined ? dados.nome.trim() : existente.nome,
+      dados.admin !== undefined ? !!dados.admin : existente.admin,
+      dados.pode_ver_fechamento !== undefined ? !!dados.pode_ver_fechamento : existente.pode_ver_fechamento,
+      salt,
+      senhaHash,
+      id,
+    ]
+  );
+  res.body = linhas[0];
+}
+
+export async function removerUsuario(req, res, params) {
+  const id = Number(params.id);
+  if (id === req.usuario.id) {
+    return erro(res, 400, 'Você não pode excluir sua própria conta.');
+  }
+  const existente = (await sql.query('SELECT id FROM usuarios WHERE id = $1', [id]))[0];
+  if (!existente) return erro(res, 404, 'Usuário não encontrado.');
+  await sql.query('DELETE FROM usuarios WHERE id = $1', [id]);
+  res.status = 204;
 }

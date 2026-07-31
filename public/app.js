@@ -67,7 +67,8 @@ async function mostrarApp(usuario) {
   appShell.hidden = false;
   estado.usuario = usuario;
   nomeUsuarioEl.textContent = usuario.nome;
-  document.getElementById('tab-fechamento').hidden = !usuario.admin;
+  document.getElementById('tab-fechamento').hidden = !usuario.admin && !usuario.pode_ver_fechamento;
+  document.getElementById('tab-usuarios').hidden = !usuario.admin;
   await carregarBase();
   await render();
 }
@@ -120,6 +121,7 @@ async function render() {
   if (estado.view === 'pacientes') return renderPacientes();
   if (estado.view === 'profissionais') return renderProfissionais();
   if (estado.view === 'fechamento') return renderFechamento();
+  if (estado.view === 'usuarios') return renderUsuarios();
 }
 
 // ---------- Modal genérico ----------
@@ -1251,6 +1253,130 @@ function abrirModalProfissional(profissional = null) {
       }
       fecharModal();
       renderProfissionais();
+    } catch (err) {
+      form.prepend(elMensagemErro(err.message));
+    }
+  };
+}
+
+// ================= USUÁRIOS (admin) =================
+
+async function renderUsuarios() {
+  app.innerHTML = '';
+
+  const topo = document.createElement('div');
+  topo.className = 'lista-topo';
+  topo.innerHTML = `<div></div><button class="btn btn--primary" id="btn-novo-usuario">+ Novo usuário</button>`;
+  app.appendChild(topo);
+  topo.querySelector('#btn-novo-usuario').onclick = () => abrirModalUsuario();
+
+  const lista = document.createElement('div');
+  app.appendChild(lista);
+
+  const usuarios = await api('GET', '/api/usuarios');
+
+  if (usuarios.length === 0) {
+    lista.appendChild(criarVazio('Nenhum usuário cadastrado.'));
+    return;
+  }
+
+  for (const u of usuarios) {
+    const ehVoceMesmo = u.id === estado.usuario.id;
+    const cartao = document.createElement('div');
+    cartao.className = 'cartao';
+    cartao.innerHTML = `
+      <div class="cartao__info">
+        <div class="cartao__titulo">
+          ${escapeHtml(u.nome)}
+          ${u.admin ? '<span class="badge badge-confirmado">Admin</span>' : ''}
+          ${u.pode_ver_fechamento ? '<span class="badge badge-concluido">Vê fechamento</span>' : ''}
+        </div>
+        <div class="cartao__sub">Login: ${escapeHtml(u.usuario)}${ehVoceMesmo ? ' · você' : ''}</div>
+      </div>
+      <div class="cartao__acoes">
+        <button class="btn btn--sm" data-acao="editar">Editar</button>
+        <button class="btn btn--sm btn--perigo" data-acao="excluir" ${ehVoceMesmo ? 'disabled title="Você não pode excluir sua própria conta."' : ''}>Excluir</button>
+      </div>
+    `;
+    cartao.querySelector('[data-acao="editar"]').onclick = () => abrirModalUsuario(u);
+    const btnExcluir = cartao.querySelector('[data-acao="excluir"]');
+    if (!ehVoceMesmo) {
+      btnExcluir.onclick = async () => {
+        if (!confirm(`Excluir o usuário "${u.nome}"?`)) return;
+        try {
+          await api('DELETE', `/api/usuarios/${u.id}`);
+          renderUsuarios();
+        } catch (err) {
+          alert(err.message);
+        }
+      };
+    }
+    lista.appendChild(cartao);
+  }
+}
+
+function abrirModalUsuario(usuario = null) {
+  const editando = !!usuario;
+  const ehVoceMesmo = editando && usuario.id === estado.usuario.id;
+  const form = document.createElement('form');
+  form.innerHTML = `
+    <div class="campo">
+      <label>Nome completo</label>
+      <input type="text" name="nome" value="${escapeHtml(usuario?.nome || '')}" required autofocus />
+    </div>
+    <div class="campo">
+      <label>Login (usuário)</label>
+      <input type="text" name="usuario" value="${escapeHtml(usuario?.usuario || '')}" required />
+    </div>
+    <div class="campo">
+      <label>${editando ? 'Nova senha (deixe em branco para manter a atual)' : 'Senha'}</label>
+      <input type="password" name="senha" ${editando ? '' : 'required'} minlength="6" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+    </div>
+    <div class="campo campo-checkbox">
+      <label>
+        <input type="checkbox" name="admin" ${usuario?.admin ? 'checked' : ''} ${ehVoceMesmo ? 'disabled title="Você não pode remover seu próprio acesso de administrador."' : ''} />
+        Administrador (acesso total, inclusive esta tela)
+      </label>
+    </div>
+    <div class="campo campo-checkbox">
+      <label>
+        <input type="checkbox" name="pode_ver_fechamento" ${usuario?.pode_ver_fechamento ? 'checked' : ''} />
+        Pode ver a aba Fechamento
+      </label>
+    </div>
+    <div class="modal__acoes">
+      <button type="button" class="btn" id="btn-cancelar-modal">Fechar</button>
+      <button type="submit" class="btn btn--primary">Salvar</button>
+    </div>
+  `;
+
+  abrirModal(editando ? 'Editar usuário' : 'Novo usuário', form, { classe: 'modal--formulario' });
+  form.querySelector('#btn-cancelar-modal').onclick = fecharModal;
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const antigo = form.querySelector('.mensagem-erro');
+    if (antigo) antigo.remove();
+
+    const fd = new FormData(form);
+    const dados = {
+      nome: fd.get('nome'),
+      usuario: fd.get('usuario'),
+      // checkbox desabilitado (você mesmo) não entra no FormData — mantém admin true nesse caso
+      admin: ehVoceMesmo ? true : fd.get('admin') === 'on',
+      pode_ver_fechamento: fd.get('pode_ver_fechamento') === 'on',
+    };
+    const senha = fd.get('senha');
+    if (senha) dados.senha = senha;
+
+    try {
+      if (editando) {
+        await api('PUT', `/api/usuarios/${usuario.id}`, dados);
+      } else {
+        await api('POST', '/api/usuarios', dados);
+      }
+      fecharModal();
+      renderUsuarios();
     } catch (err) {
       form.prepend(elMensagemErro(err.message));
     }

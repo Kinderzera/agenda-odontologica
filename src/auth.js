@@ -22,7 +22,7 @@ export async function criarSessao(usuarioId) {
 export async function usuarioDaSessao(token) {
   if (!token) return null;
   const linhas = await sql.query(
-    `SELECT u.id, u.usuario, u.nome, u.admin
+    `SELECT u.id, u.usuario, u.nome, u.admin, u.pode_ver_fechamento
      FROM sessoes s
      JOIN usuarios u ON u.id = s.usuario_id
      WHERE s.token = $1 AND s.expira_em > now()`,
@@ -66,7 +66,13 @@ export async function login(req, res) {
   }
   const token = await criarSessao(registro.id);
   res.cookies = [`${atributosCookie(token)}; Max-Age=${DURACAO_SESSAO_MS / 1000}`];
-  res.body = { id: registro.id, usuario: registro.usuario, nome: registro.nome, admin: registro.admin };
+  res.body = {
+    id: registro.id,
+    usuario: registro.usuario,
+    nome: registro.nome,
+    admin: registro.admin,
+    pode_ver_fechamento: registro.pode_ver_fechamento,
+  };
 }
 
 export async function logout(req, res) {

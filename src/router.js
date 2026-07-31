@@ -23,11 +23,16 @@ const rotas = [
   { metodo: 'PUT', padrao: /^\/api\/agendamentos\/(?<id>\d+)$/, fn: api.atualizarAgendamento },
   { metodo: 'DELETE', padrao: /^\/api\/agendamentos\/(?<id>\d+)$/, fn: api.removerAgendamento },
 
-  { metodo: 'GET', padrao: /^\/api\/fechamento$/, fn: api.listarFechamento, admin: true },
+  { metodo: 'GET', padrao: /^\/api\/fechamento$/, fn: api.listarFechamento },
 
   { metodo: 'GET', padrao: /^\/api\/bloqueios$/, fn: api.listarBloqueios },
   { metodo: 'POST', padrao: /^\/api\/bloqueios$/, fn: api.criarBloqueio },
   { metodo: 'DELETE', padrao: /^\/api\/bloqueios\/(?<id>\d+)$/, fn: api.removerBloqueio },
+
+  { metodo: 'GET', padrao: /^\/api\/usuarios$/, fn: api.listarUsuarios, admin: true },
+  { metodo: 'POST', padrao: /^\/api\/usuarios$/, fn: api.criarUsuario, admin: true },
+  { metodo: 'PUT', padrao: /^\/api\/usuarios\/(?<id>\d+)$/, fn: api.atualizarUsuario, admin: true },
+  { metodo: 'DELETE', padrao: /^\/api\/usuarios\/(?<id>\d+)$/, fn: api.removerUsuario, admin: true },
 ];
 
 async function lerCorpo(req) {

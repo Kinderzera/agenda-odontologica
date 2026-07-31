@@ -77,9 +77,12 @@ await sql.query(`
     salt TEXT NOT NULL,
     senha_hash TEXT NOT NULL,
     admin BOOLEAN NOT NULL DEFAULT false,
+    pode_ver_fechamento BOOLEAN NOT NULL DEFAULT false,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
   )
 `);
+
+await sql.query('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS pode_ver_fechamento BOOLEAN NOT NULL DEFAULT false');
 
 await sql.query(`
   CREATE TABLE IF NOT EXISTS sessoes (
