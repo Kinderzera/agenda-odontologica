@@ -707,7 +707,7 @@ function configurarSeletorHora(inputHora, listaHoras) {
 
   function renderizarLista(filtro) {
     const termo = (filtro || '').replace(/[^0-9:]/g, '');
-    const resultados = (termo ? HORARIOS_PADRAO.filter((h) => h.startsWith(termo)) : HORARIOS_PADRAO).slice(0, 8);
+    const resultados = termo ? HORARIOS_PADRAO.filter((h) => h.startsWith(termo)).slice(0, 8) : HORARIOS_PADRAO;
 
     indiceAtivo = -1;
     listaHoras.innerHTML =
@@ -893,9 +893,9 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
 
   function renderizarListaPacientes(filtro) {
     const termo = normalizarBusca(filtro);
-    const resultados = (
-      termo ? estado.pacientes.filter((p) => normalizarBusca(p.nome).includes(termo)) : estado.pacientes
-    ).slice(0, 8);
+    const resultados = termo
+      ? estado.pacientes.filter((p) => normalizarBusca(p.nome).includes(termo)).slice(0, 8)
+      : estado.pacientes;
 
     indiceAtivoPaciente = -1;
     listaAutocomplete.innerHTML =
