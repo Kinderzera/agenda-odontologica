@@ -965,10 +965,8 @@ button, input, select, textarea {
 }
 
 .date-picker {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 5;
+  position: fixed;
+  z-index: 200;
   width: 268px;
   background: var(--card-alt);
   border: 1px solid var(--borda);

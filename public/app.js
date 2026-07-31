@@ -660,9 +660,18 @@ function configurarSeletorData(inputTexto, inputOculto, calendario, { bloquearFi
     }
   }
 
+  function posicionar() {
+    const rect = inputTexto.getBoundingClientRect();
+    const largura = calendario.offsetWidth || 268;
+    const esquerda = Math.min(rect.left, window.innerWidth - largura - 8);
+    calendario.style.top = `${rect.bottom + 6}px`;
+    calendario.style.left = `${Math.max(8, esquerda)}px`;
+  }
+
   inputTexto.addEventListener('click', () => {
     renderizar();
     calendario.hidden = false;
+    posicionar();
   });
   calendario.addEventListener('mousedown', (e) => e.preventDefault());
   inputTexto.addEventListener('blur', () => {
