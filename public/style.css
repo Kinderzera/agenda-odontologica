@@ -162,13 +162,22 @@ button, input, select, textarea {
 .botao-olho {
   position: absolute;
   right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: var(--texto-suave);
   cursor: pointer;
-  font-size: 15px;
   padding: 4px;
 }
+
+.botao-olho svg {
+  width: 19px;
+  height: 19px;
+}
+
+.botao-olho:hover { color: var(--texto); }
 
 .btn-entrar {
   width: 100%;

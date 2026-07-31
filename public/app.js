@@ -87,9 +87,22 @@ formLogin.addEventListener('submit', async (e) => {
   }
 });
 
-document.getElementById('btn-mostrar-senha').addEventListener('click', () => {
+const ICONE_OLHO_ABERTO = `
+  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+  <circle cx="12" cy="12" r="3" />
+`;
+const ICONE_OLHO_FECHADO = `
+  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-3.16 4.19M6.61 6.61A18.5 18.5 0 0 0 1 12s4 8 11 8a9.26 9.26 0 0 0 5.39-1.61M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+  <path d="M1 1l22 22" />
+`;
+
+const btnMostrarSenha = document.getElementById('btn-mostrar-senha');
+btnMostrarSenha.addEventListener('click', () => {
   const campo = document.getElementById('campo-senha');
-  campo.type = campo.type === 'password' ? 'text' : 'password';
+  const visivel = campo.type === 'password';
+  campo.type = visivel ? 'text' : 'password';
+  btnMostrarSenha.setAttribute('aria-label', visivel ? 'Ocultar senha' : 'Mostrar senha');
+  btnMostrarSenha.querySelector('svg').innerHTML = visivel ? ICONE_OLHO_FECHADO : ICONE_OLHO_ABERTO;
 });
 
 document.getElementById('btn-sair').addEventListener('click', async () => {
