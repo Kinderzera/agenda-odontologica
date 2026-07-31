@@ -909,6 +909,16 @@ button, input, select, textarea {
 
 .autocomplete { position: relative; }
 
+.autocomplete input[readonly] {
+  cursor: pointer;
+  color: var(--texto);
+}
+
+.autocomplete input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .autocomplete__lista {
   position: absolute;
   top: calc(100% + 6px);
@@ -952,6 +962,102 @@ button, input, select, textarea {
   color: var(--texto-suave);
   font-size: 13px;
   text-align: center;
+}
+
+.date-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  width: 268px;
+  background: var(--card-alt);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  padding: 14px;
+}
+
+.date-picker__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.date-picker__mes {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.date-picker__nav-grupo { display: flex; gap: 4px; }
+
+.date-picker__nav {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid var(--borda);
+  background: var(--card);
+  color: var(--texto-suave);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-picker__nav:hover { background: var(--card); border-color: var(--azul-escuro); color: var(--texto); }
+
+.date-picker__grade {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.date-picker__cab {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--texto-fraco);
+  text-transform: uppercase;
+  padding-bottom: 4px;
+}
+
+.date-picker__dia {
+  aspect-ratio: 1;
+  border: none;
+  background: transparent;
+  color: var(--texto);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-picker__dia:hover:not(:disabled) { background: var(--card); }
+
+.date-picker__dia--fora { color: var(--texto-fraco); }
+
+.date-picker__dia--hoje { box-shadow: inset 0 0 0 1.5px var(--azul); }
+
+.date-picker__dia--selecionado {
+  background: linear-gradient(180deg, var(--azul-claro), var(--azul));
+  color: #04222c;
+  font-weight: 800;
+}
+.date-picker__dia--selecionado:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--azul-claro), var(--azul));
+}
+
+.date-picker__dia--desabilitado {
+  color: var(--texto-fraco);
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .modal--formulario { max-width: 560px; }

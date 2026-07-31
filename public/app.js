@@ -44,6 +44,12 @@ function formatarDataLonga(date) {
   return date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+function formatarDataCurta(iso) {
+  if (!iso) return '';
+  const [ano, mes, dia] = iso.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
 // ---------- Autenticação ----------
 
 const telaLogin = document.getElementById('tela-login');
@@ -452,7 +458,11 @@ function abrirModalRemarcar(agendamento) {
     <div class="linha-campos">
       <div class="campo">
         <label>Nova data</label>
-        <input type="date" name="data" value="${agendamento.data}" required />
+        <div class="autocomplete" id="seletor-data-remarcar">
+          <input type="text" id="texto-data-remarcar" value="${formatarDataCurta(agendamento.data)}" readonly required />
+          <input type="hidden" name="data" id="input-data-remarcar" value="${agendamento.data}" />
+          <div class="date-picker" id="calendario-data-remarcar" hidden></div>
+        </div>
       </div>
       <div class="campo">
         <label>Novo horário</label>
@@ -487,7 +497,12 @@ function abrirModalRemarcar(agendamento) {
 
   form.querySelector('#btn-cancelar-remarcar').onclick = fecharModal;
   configurarSeletorHora(form.querySelector('#input-hora-remarcar'), form.querySelector('#lista-hora-remarcar'));
-  bloquearFinsDeSemana(form.querySelector('input[name="data"]'));
+  configurarSeletorData(
+    form.querySelector('#texto-data-remarcar'),
+    form.querySelector('#input-data-remarcar'),
+    form.querySelector('#calendario-data-remarcar'),
+    { bloquearFimDeSemana: true }
+  );
 
   form.onsubmit = async (e) => {
     e.preventDefault();
@@ -588,20 +603,71 @@ function gerarHorariosPadrao(passoMin = 15, inicio = '07:00', fim = '20:45') {
 
 const HORARIOS_PADRAO = gerarHorariosPadrao();
 
-function bloquearFinsDeSemana(inputData) {
-  function validar() {
-    if (!inputData.value) {
-      inputData.setCustomValidity('');
-      return;
+const DIAS_SEMANA_MINI = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+function configurarSeletorData(inputTexto, inputOculto, calendario, { bloquearFimDeSemana = false } = {}) {
+  let mesAtual = new Date(inputOculto.value ? inputOculto.value + 'T00:00:00' : new Date());
+  mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth(), 1);
+
+  function renderizar() {
+    const celulas = gerarCelulasMes(mesAtual);
+    const hojeISO = paraISO(new Date());
+    const selecionadoISO = inputOculto.value;
+
+    calendario.innerHTML = `
+      <div class="date-picker__cabecalho">
+        <span class="date-picker__mes">${nomeMesAno(mesAtual)}</span>
+        <div class="date-picker__nav-grupo">
+          <button type="button" class="date-picker__nav" data-dir="-1" aria-label="Mês anterior">‹</button>
+          <button type="button" class="date-picker__nav" data-dir="1" aria-label="Próximo mês">›</button>
+        </div>
+      </div>
+      <div class="date-picker__grade">
+        ${DIAS_SEMANA_MINI.map((d) => `<span class="date-picker__cab">${d}</span>`).join('')}
+        ${celulas
+          .map((c) => {
+            const iso = paraISO(c.data);
+            const desabilitado = bloquearFimDeSemana && [0, 6].includes(c.data.getDay());
+            const classes = [
+              'date-picker__dia',
+              c.foraDoMes ? 'date-picker__dia--fora' : '',
+              iso === hojeISO ? 'date-picker__dia--hoje' : '',
+              iso === selecionadoISO ? 'date-picker__dia--selecionado' : '',
+              desabilitado ? 'date-picker__dia--desabilitado' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+            return `<button type="button" class="${classes}" data-iso="${iso}" ${desabilitado ? 'disabled' : ''}>${c.data.getDate()}</button>`;
+          })
+          .join('')}
+      </div>
+    `;
+
+    calendario.querySelector('[data-dir="-1"]').onclick = () => {
+      mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth() - 1, 1);
+      renderizar();
+    };
+    calendario.querySelector('[data-dir="1"]').onclick = () => {
+      mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + 1, 1);
+      renderizar();
+    };
+    for (const botao of calendario.querySelectorAll('.date-picker__dia:not([disabled])')) {
+      botao.onclick = () => {
+        inputOculto.value = botao.dataset.iso;
+        inputTexto.value = formatarDataCurta(botao.dataset.iso);
+        calendario.hidden = true;
+      };
     }
-    const diaSemana = new Date(inputData.value + 'T00:00:00').getDay();
-    inputData.setCustomValidity(
-      diaSemana === 0 || diaSemana === 6 ? 'A clínica não atende aos sábados e domingos. Escolha outro dia.' : ''
-    );
   }
-  inputData.addEventListener('input', validar);
-  inputData.addEventListener('change', validar);
-  validar();
+
+  inputTexto.addEventListener('click', () => {
+    renderizar();
+    calendario.hidden = false;
+  });
+  calendario.addEventListener('mousedown', (e) => e.preventDefault());
+  inputTexto.addEventListener('blur', () => {
+    calendario.hidden = true;
+  });
 }
 
 function configurarSeletorHora(inputHora, listaHoras) {
@@ -717,13 +783,18 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
     <div class="linha-campos">
       <div class="campo">
         <label>Data</label>
-        <input
-          type="date"
-          name="data"
-          value="${agendamento?.data || dataSugerida || paraISO(new Date())}"
-          ${dataBloqueada ? 'readonly' : ''}
-          required
-        />
+        <div class="autocomplete" id="seletor-data-agendamento">
+          <input
+            type="text"
+            id="texto-data-agendamento"
+            value="${formatarDataCurta(agendamento?.data || dataSugerida || paraISO(new Date()))}"
+            readonly
+            required
+            ${dataBloqueada ? 'disabled' : ''}
+          />
+          <input type="hidden" name="data" id="input-data-agendamento" value="${agendamento?.data || dataSugerida || paraISO(new Date())}" />
+          <div class="date-picker" id="calendario-data-agendamento" hidden></div>
+        </div>
         ${dataBloqueada ? '<small class="campo__dica">Definida pelo dia selecionado na agenda.</small>' : ''}
       </div>
       <div class="campo">
@@ -855,7 +926,14 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
   });
 
   configurarSeletorHora(form.querySelector('#input-hora-agendamento'), form.querySelector('#lista-autocomplete-hora'));
-  if (!dataBloqueada) bloquearFinsDeSemana(form.querySelector('input[name="data"]'));
+  if (!dataBloqueada) {
+    configurarSeletorData(
+      form.querySelector('#texto-data-agendamento'),
+      form.querySelector('#input-data-agendamento'),
+      form.querySelector('#calendario-data-agendamento'),
+      { bloquearFimDeSemana: true }
+    );
+  }
 
   form.querySelector('#btn-novo-paciente-inline').onclick = () => {
     abrirModalPaciente(null, async (pacienteCriado) => {
