@@ -376,7 +376,7 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia) {
   );
 
   container.querySelector('#btn-agendar-neste-dia').onclick = () => {
-    abrirModalAgendamento(null, null, dataISO);
+    abrirModalAgendamento(null, null, dataISO, true);
   };
 }
 
@@ -407,7 +407,7 @@ const STATUS_LABEL = {
   faltou: 'Faltou',
 };
 
-function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSugerida = null) {
+function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSugerida = null, dataBloqueada = false) {
   const editando = !!agendamento;
   const form = document.createElement('form');
 
@@ -449,7 +449,14 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
     <div class="linha-campos">
       <div class="campo">
         <label>Data</label>
-        <input type="date" name="data" value="${agendamento?.data || dataSugerida || paraISO(new Date())}" required />
+        <input
+          type="date"
+          name="data"
+          value="${agendamento?.data || dataSugerida || paraISO(new Date())}"
+          ${dataBloqueada ? 'readonly' : ''}
+          required
+        />
+        ${dataBloqueada ? '<small class="campo__dica">Definida pelo dia selecionado na agenda.</small>' : ''}
       </div>
       <div class="campo">
         <label>Hora</label>
@@ -567,7 +574,7 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
   form.querySelector('#btn-novo-paciente-inline').onclick = () => {
     abrirModalPaciente(null, async (pacienteCriado) => {
       estado.pacientes = await api('GET', '/api/pacientes');
-      abrirModalAgendamento(agendamento, horaSugerida, dataSugerida);
+      abrirModalAgendamento(agendamento, horaSugerida, dataSugerida, dataBloqueada);
       requestAnimationFrame(() => {
         const buscaEl = modalRoot.querySelector('#busca-paciente-agendamento');
         const idEl = modalRoot.querySelector('#input-paciente-id');

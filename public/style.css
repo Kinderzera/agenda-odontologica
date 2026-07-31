@@ -801,6 +801,19 @@ button, input, select, textarea {
 .campo textarea { resize: vertical; min-height: 60px; }
 .campo input[type="color"] { padding: 4px; height: 42px; }
 
+.campo input[readonly] {
+  background: var(--painel);
+  color: var(--texto-suave);
+  cursor: not-allowed;
+}
+
+.campo__dica {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--texto-fraco);
+}
+
 .linha-campos {
   display: flex;
   gap: 14px;
