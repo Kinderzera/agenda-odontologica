@@ -248,6 +248,29 @@ button, input, select, textarea {
   font-size: 14px;
 }
 
+.sidebar__perfil {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sidebar__perfil #nome-usuario {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-usuario {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--borda);
+  background: var(--card);
+}
+
 .btn-sair {
   border: 1px solid var(--borda);
   background: var(--card);
@@ -764,6 +787,17 @@ button, input, select, textarea {
 .cartao__titulo { font-weight: 700; color: #fff; }
 .cartao__sub { color: var(--texto-suave); font-size: 13px; margin-top: 2px; }
 .cartao__acoes { display: flex; gap: 6px; flex-shrink: 0; }
+
+.cartao__perfil { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cartao__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--borda);
+  background: var(--painel);
+}
 
 /* ---------- Modal ---------- */
 

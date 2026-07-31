@@ -56,6 +56,13 @@ const telaLogin = document.getElementById('tela-login');
 const appShell = document.getElementById('app-shell');
 const formLogin = document.getElementById('form-login');
 const nomeUsuarioEl = document.getElementById('nome-usuario');
+const avatarUsuarioEl = document.getElementById('avatar-usuario');
+
+function avatarDoUsuario(nome) {
+  return (nome || '').toLowerCase().includes('mayra')
+    ? 'assets/avatar-mayra.png'
+    : 'assets/avatar-generico.svg';
+}
 
 function mostrarLogin() {
   appShell.hidden = true;
@@ -67,6 +74,7 @@ async function mostrarApp(usuario) {
   appShell.hidden = false;
   estado.usuario = usuario;
   nomeUsuarioEl.textContent = usuario.nome;
+  avatarUsuarioEl.src = avatarDoUsuario(usuario.nome);
   document.getElementById('tab-fechamento').hidden = !usuario.admin && !usuario.pode_ver_fechamento;
   document.getElementById('tab-usuarios').hidden = !usuario.admin;
   await carregarBase();
@@ -1298,13 +1306,16 @@ async function renderUsuarios() {
     const cartao = document.createElement('div');
     cartao.className = 'cartao';
     cartao.innerHTML = `
-      <div class="cartao__info">
-        <div class="cartao__titulo">
-          ${escapeHtml(u.nome)}
-          ${u.admin ? '<span class="badge badge-confirmado">Admin</span>' : ''}
-          ${u.pode_ver_fechamento ? '<span class="badge badge-concluido">Vê fechamento</span>' : ''}
+      <div class="cartao__perfil">
+        <img class="cartao__avatar" src="${avatarDoUsuario(u.nome)}" alt="" />
+        <div class="cartao__info">
+          <div class="cartao__titulo">
+            ${escapeHtml(u.nome)}
+            ${u.admin ? '<span class="badge badge-confirmado">Admin</span>' : ''}
+            ${u.pode_ver_fechamento ? '<span class="badge badge-concluido">Vê fechamento</span>' : ''}
+          </div>
+          <div class="cartao__sub">Login: ${escapeHtml(u.usuario)}${ehVoceMesmo ? ' · você' : ''}</div>
         </div>
-        <div class="cartao__sub">Login: ${escapeHtml(u.usuario)}${ehVoceMesmo ? ' · você' : ''}</div>
       </div>
       <div class="cartao__acoes">
         <button class="btn btn--sm" data-acao="editar">Editar</button>
