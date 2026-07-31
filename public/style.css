@@ -811,6 +811,53 @@ button, input, select, textarea {
   margin-top: 8px;
 }
 
+.autocomplete { position: relative; }
+
+.autocomplete__lista {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  background: var(--card-alt);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.autocomplete__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--texto);
+}
+
+.autocomplete__item small {
+  color: var(--texto-suave);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.autocomplete__item:hover,
+.autocomplete__item.is-ativo {
+  background: var(--card);
+}
+
+.autocomplete__vazio {
+  padding: 12px 10px;
+  color: var(--texto-suave);
+  font-size: 13px;
+  text-align: center;
+}
+
 .modal--formulario { max-width: 560px; }
 
 .modal__acoes {

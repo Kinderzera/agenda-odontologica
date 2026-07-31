@@ -387,6 +387,10 @@ function criarVazio(texto) {
   return div;
 }
 
+function normalizarBusca(str) {
+  return (str || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+}
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
@@ -414,12 +418,7 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
     )
     .join('');
 
-  const opcoesPacientes = estado.pacientes
-    .map(
-      (p) =>
-        `<option value="${p.id}" ${agendamento?.paciente_id === p.id ? 'selected' : ''}>${escapeHtml(p.nome)}${p.telefone ? ' — ' + escapeHtml(p.telefone) : ''}</option>`
-    )
-    .join('');
+  const pacienteAtual = agendamento ? estado.pacientes.find((p) => p.id === agendamento.paciente_id) : null;
 
   const opcoesStatus = Object.entries(STATUS_LABEL)
     .map(([v, label]) => `<option value="${v}" ${agendamento?.status === v ? 'selected' : ''}>${label}</option>`)
@@ -429,10 +428,17 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
     <div class="linha-campos">
       <div class="campo">
         <label>Paciente</label>
-        <select name="paciente_id" required>
-          <option value="">Selecione...</option>
-          ${opcoesPacientes}
-        </select>
+        <div class="autocomplete" id="autocomplete-paciente">
+          <input
+            type="text"
+            id="busca-paciente-agendamento"
+            placeholder="Digite o nome do paciente..."
+            autocomplete="off"
+            value="${escapeHtml(pacienteAtual?.nome || '')}"
+          />
+          <input type="hidden" name="paciente_id" id="input-paciente-id" value="${agendamento?.paciente_id || ''}" />
+          <div class="autocomplete__lista" id="lista-autocomplete-paciente" hidden></div>
+        </div>
         <button type="button" class="btn btn--sm campo__acao-inline" id="btn-novo-paciente-inline">+ Novo paciente</button>
       </div>
       <div class="campo">
@@ -486,14 +492,89 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
 
   form.querySelector('#btn-cancelar-modal').onclick = fecharModal;
 
+  const inputBuscaPaciente = form.querySelector('#busca-paciente-agendamento');
+  const inputPacienteId = form.querySelector('#input-paciente-id');
+  const listaAutocomplete = form.querySelector('#lista-autocomplete-paciente');
+  let indiceAtivoPaciente = -1;
+
+  function renderizarListaPacientes(filtro) {
+    const termo = normalizarBusca(filtro);
+    const resultados = (
+      termo ? estado.pacientes.filter((p) => normalizarBusca(p.nome).includes(termo)) : estado.pacientes
+    ).slice(0, 8);
+
+    indiceAtivoPaciente = -1;
+    listaAutocomplete.innerHTML =
+      resultados.length === 0
+        ? '<div class="autocomplete__vazio">Nenhum paciente encontrado.</div>'
+        : resultados
+            .map(
+              (p) =>
+                `<div class="autocomplete__item" data-id="${p.id}"><span>${escapeHtml(p.nome)}</span>${p.telefone ? `<small>${escapeHtml(p.telefone)}</small>` : ''}</div>`
+            )
+            .join('');
+
+    for (const item of listaAutocomplete.querySelectorAll('.autocomplete__item')) {
+      item.onclick = () => selecionarPaciente(resultados.find((p) => p.id === Number(item.dataset.id)));
+    }
+    listaAutocomplete.hidden = false;
+  }
+
+  function selecionarPaciente(paciente) {
+    inputPacienteId.value = paciente.id;
+    inputBuscaPaciente.value = paciente.nome;
+    listaAutocomplete.hidden = true;
+  }
+
+  function destacarItemPaciente() {
+    const itens = [...listaAutocomplete.querySelectorAll('.autocomplete__item')];
+    itens.forEach((item, i) => item.classList.toggle('is-ativo', i === indiceAtivoPaciente));
+    itens[indiceAtivoPaciente]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  inputBuscaPaciente.addEventListener('input', () => {
+    inputPacienteId.value = '';
+    renderizarListaPacientes(inputBuscaPaciente.value);
+  });
+
+  inputBuscaPaciente.addEventListener('focus', () => renderizarListaPacientes(inputBuscaPaciente.value));
+
+  inputBuscaPaciente.addEventListener('keydown', (e) => {
+    const itens = listaAutocomplete.querySelectorAll('.autocomplete__item');
+    if (listaAutocomplete.hidden || itens.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      indiceAtivoPaciente = Math.min(indiceAtivoPaciente + 1, itens.length - 1);
+      destacarItemPaciente();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      indiceAtivoPaciente = Math.max(indiceAtivoPaciente - 1, 0);
+      destacarItemPaciente();
+    } else if (e.key === 'Enter' && indiceAtivoPaciente >= 0) {
+      e.preventDefault();
+      itens[indiceAtivoPaciente].click();
+    } else if (e.key === 'Escape') {
+      listaAutocomplete.hidden = true;
+    }
+  });
+
+  // impede que o clique num item feche a lista antes do onclick disparar
+  listaAutocomplete.addEventListener('mousedown', (e) => e.preventDefault());
+  inputBuscaPaciente.addEventListener('blur', () => {
+    listaAutocomplete.hidden = true;
+  });
+
   form.querySelector('#btn-novo-paciente-inline').onclick = () => {
     abrirModalPaciente(null, async (pacienteCriado) => {
       estado.pacientes = await api('GET', '/api/pacientes');
       abrirModalAgendamento(agendamento, horaSugerida, dataSugerida);
-      form.querySelector('select[name="paciente_id"]');
       requestAnimationFrame(() => {
-        const sel = modalRoot.querySelector('select[name="paciente_id"]');
-        if (sel) sel.value = pacienteCriado.id;
+        const buscaEl = modalRoot.querySelector('#busca-paciente-agendamento');
+        const idEl = modalRoot.querySelector('#input-paciente-id');
+        if (buscaEl && idEl) {
+          idEl.value = pacienteCriado.id;
+          buscaEl.value = pacienteCriado.nome;
+        }
       });
     });
   };
@@ -509,15 +590,22 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
 
   form.onsubmit = async (e) => {
     e.preventDefault();
+
+    const antigo = form.querySelector('.mensagem-erro');
+    if (antigo) antigo.remove();
+
+    if (!inputPacienteId.value) {
+      form.prepend(elMensagemErro('Selecione um paciente da lista.'));
+      inputBuscaPaciente.focus();
+      return;
+    }
+
     const fd = new FormData(form);
     const dados = Object.fromEntries(fd.entries());
     dados.paciente_id = Number(dados.paciente_id);
     dados.profissional_id = Number(dados.profissional_id);
     dados.duracao_min = Number(dados.duracao_min);
     dados.valor = Number(dados.valor) || 0;
-
-    const antigo = form.querySelector('.mensagem-erro');
-    if (antigo) antigo.remove();
 
     try {
       if (editando) {
