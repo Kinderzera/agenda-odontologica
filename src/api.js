@@ -35,6 +35,11 @@ async function checarConflito({ id, profissional_id, data, hora_inicio, duracao_
   return doDia.find((ag) => agendamentosConflitam(ag, novo));
 }
 
+function ehFimDeSemana(data) {
+  const diaSemana = new Date(`${data}T00:00:00`).getDay();
+  return diaSemana === 0 || diaSemana === 6;
+}
+
 async function checarBloqueio(profissional_id, data) {
   const linhas = await sql.query('SELECT * FROM bloqueios WHERE profissional_id = $1 AND data = $2', [
     profissional_id,
@@ -204,6 +209,10 @@ export async function criarAgendamento(req, res) {
     return erro(res, 400, 'paciente_id, profissional_id, data e hora_inicio são obrigatórios.');
   }
 
+  if (ehFimDeSemana(data)) {
+    return erro(res, 400, 'A clínica não atende aos sábados e domingos.');
+  }
+
   const bloqueio = await checarBloqueio(profissional_id, data);
   if (bloqueio) {
     return erro(res, 409, `Este profissional está com o dia ${data} bloqueado${bloqueio.motivo ? ` (${bloqueio.motivo})` : ''}.`);
@@ -248,6 +257,10 @@ export async function atualizarAgendamento(req, res, params) {
 
   if (dados.status !== 'cancelado') {
     if (remarcado) {
+      if (ehFimDeSemana(candidato.data)) {
+        return erro(res, 400, 'A clínica não atende aos sábados e domingos.');
+      }
+
       const bloqueio = await checarBloqueio(candidato.profissional_id, candidato.data);
       if (bloqueio) {
         return erro(

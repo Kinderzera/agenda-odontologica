@@ -342,9 +342,11 @@ function criarChipProfissional(id, nome, cor) {
 function abrirModalDiaDetalhe(dataISO, agendamentosDoDia, bloqueiosDoDia = []) {
   const container = document.createElement('div');
 
+  const fimDeSemana = [0, 6].includes(new Date(dataISO + 'T00:00:00').getDay());
   const profissionaisBloqueadosIds = new Set(bloqueiosDoDia.map((b) => b.profissional_id));
   const todosBloqueados =
-    estado.profissionais.length > 0 && estado.profissionais.every((p) => profissionaisBloqueadosIds.has(p.id));
+    fimDeSemana ||
+    (estado.profissionais.length > 0 && estado.profissionais.every((p) => profissionaisBloqueadosIds.has(p.id)));
   const profissionaisDisponiveis = estado.profissionais.filter((p) => !profissionaisBloqueadosIds.has(p.id));
 
   if (bloqueiosDoDia.length > 0) {
@@ -370,8 +372,8 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia, bloqueiosDoDia = []) {
   const cabecalho = document.createElement('div');
   cabecalho.className = 'dia-detalhe__cabecalho';
   cabecalho.innerHTML = `
-    ${profissionaisDisponiveis.length > 0 ? `<button type="button" class="btn btn--perigo btn--sm" id="btn-bloquear-dia">🚫 Bloquear dia</button>` : ''}
-    <button type="button" class="btn btn--primary" id="btn-agendar-neste-dia" ${todosBloqueados ? 'disabled title="Nenhum profissional disponível neste dia."' : ''}><span aria-hidden="true">+</span> Agendar neste dia</button>
+    ${profissionaisDisponiveis.length > 0 && !fimDeSemana ? `<button type="button" class="btn btn--perigo btn--sm" id="btn-bloquear-dia">🚫 Bloquear dia</button>` : ''}
+    <button type="button" class="btn btn--primary" id="btn-agendar-neste-dia" ${todosBloqueados ? `disabled title="${fimDeSemana ? 'A clínica não atende aos sábados e domingos.' : 'Nenhum profissional disponível neste dia.'}"` : ''}><span aria-hidden="true">+</span> Agendar neste dia</button>
   `;
   container.appendChild(cabecalho);
 
@@ -485,6 +487,7 @@ function abrirModalRemarcar(agendamento) {
 
   form.querySelector('#btn-cancelar-remarcar').onclick = fecharModal;
   configurarSeletorHora(form.querySelector('#input-hora-remarcar'), form.querySelector('#lista-hora-remarcar'));
+  bloquearFinsDeSemana(form.querySelector('input[name="data"]'));
 
   form.onsubmit = async (e) => {
     e.preventDefault();
@@ -584,6 +587,22 @@ function gerarHorariosPadrao(passoMin = 15, inicio = '07:00', fim = '20:45') {
 }
 
 const HORARIOS_PADRAO = gerarHorariosPadrao();
+
+function bloquearFinsDeSemana(inputData) {
+  function validar() {
+    if (!inputData.value) {
+      inputData.setCustomValidity('');
+      return;
+    }
+    const diaSemana = new Date(inputData.value + 'T00:00:00').getDay();
+    inputData.setCustomValidity(
+      diaSemana === 0 || diaSemana === 6 ? 'A clínica não atende aos sábados e domingos. Escolha outro dia.' : ''
+    );
+  }
+  inputData.addEventListener('input', validar);
+  inputData.addEventListener('change', validar);
+  validar();
+}
 
 function configurarSeletorHora(inputHora, listaHoras) {
   let indiceAtivo = -1;
@@ -836,6 +855,7 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
   });
 
   configurarSeletorHora(form.querySelector('#input-hora-agendamento'), form.querySelector('#lista-autocomplete-hora'));
+  if (!dataBloqueada) bloquearFinsDeSemana(form.querySelector('input[name="data"]'));
 
   form.querySelector('#btn-novo-paciente-inline').onclick = () => {
     abrirModalPaciente(null, async (pacienteCriado) => {
