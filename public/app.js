@@ -122,7 +122,7 @@ function fecharModal() {
   modalRoot.innerHTML = '';
 }
 
-function abrirModal(tituloHtml, conteudoEl) {
+function abrirModal(tituloHtml, conteudoEl, opts = {}) {
   modalRoot.innerHTML = '';
   const fundo = document.createElement('div');
   fundo.className = 'modal-fundo';
@@ -131,11 +131,34 @@ function abrirModal(tituloHtml, conteudoEl) {
   });
 
   const modal = document.createElement('div');
-  modal.className = 'modal';
+  modal.className = 'modal' + (opts.classe ? ` ${opts.classe}` : '');
+
+  const cabecalho = document.createElement('div');
+  cabecalho.className = 'modal__cabecalho';
+
+  const tituloWrap = document.createElement('div');
+  tituloWrap.className = 'modal__titulo-wrap';
   const titulo = document.createElement('h2');
   titulo.className = 'modal__titulo';
   titulo.innerHTML = tituloHtml;
-  modal.appendChild(titulo);
+  tituloWrap.appendChild(titulo);
+  if (opts.subtitulo) {
+    const subtitulo = document.createElement('p');
+    subtitulo.className = 'modal__subtitulo';
+    subtitulo.innerHTML = opts.subtitulo;
+    tituloWrap.appendChild(subtitulo);
+  }
+  cabecalho.appendChild(tituloWrap);
+
+  const fechar = document.createElement('button');
+  fechar.type = 'button';
+  fechar.className = 'modal__fechar';
+  fechar.setAttribute('aria-label', 'Fechar');
+  fechar.innerHTML = '&times;';
+  fechar.onclick = fecharModal;
+  cabecalho.appendChild(fechar);
+
+  modal.appendChild(cabecalho);
   modal.appendChild(conteudoEl);
 
   fundo.appendChild(modal);
@@ -299,14 +322,20 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia) {
 
   const cabecalho = document.createElement('div');
   cabecalho.className = 'dia-detalhe__cabecalho';
-  cabecalho.innerHTML = `<button class="btn btn--primary btn--sm" id="btn-agendar-neste-dia">+ Agendar neste dia</button>`;
+  cabecalho.innerHTML = `<button class="btn btn--primary" id="btn-agendar-neste-dia"><span aria-hidden="true">+</span> Agendar neste dia</button>`;
   container.appendChild(cabecalho);
 
   const lista = document.createElement('div');
   lista.className = 'dia-detalhe__lista';
 
   if (agendamentosDoDia.length === 0) {
-    lista.appendChild(criarVazio('Nenhum agendamento neste dia.'));
+    const vazio = document.createElement('div');
+    vazio.className = 'dia-detalhe__vazio';
+    vazio.innerHTML = `
+      <div class="dia-detalhe__vazio-icone" aria-hidden="true">📅</div>
+      <div class="dia-detalhe__vazio-texto">Nenhum agendamento neste dia.</div>
+    `;
+    lista.appendChild(vazio);
   } else {
     for (const ag of agendamentosDoDia) {
       const item = document.createElement('div');
@@ -333,7 +362,18 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia) {
   }
   container.appendChild(lista);
 
-  abrirModal(`Agenda de ${formatarDataLonga(new Date(dataISO + 'T00:00:00'))}`, container);
+  const subtitulo =
+    agendamentosDoDia.length === 0
+      ? 'Nenhuma consulta agendada'
+      : agendamentosDoDia.length === 1
+        ? '1 consulta agendada'
+        : `${agendamentosDoDia.length} consultas agendadas`;
+
+  abrirModal(
+    `<span class="modal__titulo-icone" aria-hidden="true">🗓️</span>${formatarDataLonga(new Date(dataISO + 'T00:00:00'))}`,
+    container,
+    { classe: 'modal--agenda-dia', subtitulo }
+  );
 
   container.querySelector('#btn-agendar-neste-dia').onclick = () => {
     abrirModalAgendamento(null, null, dataISO);
