@@ -35,6 +35,14 @@ async function checarConflito({ id, profissional_id, data, hora_inicio, duracao_
   return doDia.find((ag) => agendamentosConflitam(ag, novo));
 }
 
+async function checarBloqueio(profissional_id, data) {
+  const linhas = await sql.query('SELECT * FROM bloqueios WHERE profissional_id = $1 AND data = $2', [
+    profissional_id,
+    data,
+  ]);
+  return linhas[0] ?? null;
+}
+
 // ---------- Profissionais ----------
 
 export async function listarProfissionais(req, res) {
@@ -196,6 +204,11 @@ export async function criarAgendamento(req, res) {
     return erro(res, 400, 'paciente_id, profissional_id, data e hora_inicio são obrigatórios.');
   }
 
+  const bloqueio = await checarBloqueio(profissional_id, data);
+  if (bloqueio) {
+    return erro(res, 409, `Este profissional está com o dia ${data} bloqueado${bloqueio.motivo ? ` (${bloqueio.motivo})` : ''}.`);
+  }
+
   const conflito = await checarConflito({ profissional_id, data, hora_inicio, duracao_min });
   if (conflito) {
     return erro(
@@ -231,7 +244,20 @@ export async function atualizarAgendamento(req, res, params) {
     duracao_min: dados.duracao_min ?? existente.duracao_min,
   };
 
+  const remarcado = candidato.data !== existente.data || candidato.profissional_id !== existente.profissional_id;
+
   if (dados.status !== 'cancelado') {
+    if (remarcado) {
+      const bloqueio = await checarBloqueio(candidato.profissional_id, candidato.data);
+      if (bloqueio) {
+        return erro(
+          res,
+          409,
+          `Este profissional está com o dia ${candidato.data} bloqueado${bloqueio.motivo ? ` (${bloqueio.motivo})` : ''}.`
+        );
+      }
+    }
+
     const conflito = await checarConflito(candidato);
     if (conflito) {
       return erro(
@@ -269,6 +295,47 @@ export async function removerAgendamento(req, res, params) {
   const existente = (await sql.query('SELECT id FROM agendamentos WHERE id = $1', [id]))[0];
   if (!existente) return erro(res, 404, 'Agendamento não encontrado.');
   await sql.query('DELETE FROM agendamentos WHERE id = $1', [id]);
+  res.status = 204;
+}
+
+// ---------- Bloqueios (dias indisponíveis) ----------
+
+export async function listarBloqueios(req, res, params, query) {
+  const { inicio, fim } = query;
+  if (!inicio || !fim) return erro(res, 400, 'Informe "inicio" e "fim".');
+  res.body = await sql.query(
+    `SELECT b.*, pr.nome AS profissional_nome, pr.cor AS profissional_cor
+     FROM bloqueios b
+     JOIN profissionais pr ON pr.id = b.profissional_id
+     WHERE b.data BETWEEN $1 AND $2
+     ORDER BY b.data`,
+    [inicio, fim]
+  );
+}
+
+export async function criarBloqueio(req, res) {
+  const { profissional_id, data, motivo = '' } = req.json ?? {};
+  if (!profissional_id || !data) return erro(res, 400, 'profissional_id e data são obrigatórios.');
+
+  const existente = await sql.query('SELECT id FROM bloqueios WHERE profissional_id = $1 AND data = $2', [
+    profissional_id,
+    data,
+  ]);
+  if (existente[0]) return erro(res, 409, 'Este dia já está bloqueado para este profissional.');
+
+  const linhas = await sql.query(
+    `INSERT INTO bloqueios (profissional_id, data, motivo) VALUES ($1, $2, $3) RETURNING *`,
+    [profissional_id, data, motivo]
+  );
+  res.status = 201;
+  res.body = linhas[0];
+}
+
+export async function removerBloqueio(req, res, params) {
+  const id = Number(params.id);
+  const existente = (await sql.query('SELECT id FROM bloqueios WHERE id = $1', [id]))[0];
+  if (!existente) return erro(res, 404, 'Bloqueio não encontrado.');
+  await sql.query('DELETE FROM bloqueios WHERE id = $1', [id]);
   res.status = 204;
 }
 

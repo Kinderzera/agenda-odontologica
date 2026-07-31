@@ -57,6 +57,19 @@ await sql.query(`
 await sql.query('CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos(data)');
 
 await sql.query(`
+  CREATE TABLE IF NOT EXISTS bloqueios (
+    id SERIAL PRIMARY KEY,
+    profissional_id INTEGER NOT NULL REFERENCES profissionais(id) ON DELETE CASCADE,
+    data TEXT NOT NULL,
+    motivo TEXT,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (profissional_id, data)
+  )
+`);
+
+await sql.query('CREATE INDEX IF NOT EXISTS idx_bloqueios_data ON bloqueios(data)');
+
+await sql.query(`
   CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     usuario TEXT NOT NULL UNIQUE,

@@ -244,15 +244,25 @@ async function renderAgenda() {
   const celulas = gerarCelulasMes(estado.data);
   const inicioISO = paraISO(celulas[0].data);
   const fimISO = paraISO(celulas[celulas.length - 1].data);
-  let agendamentosMes = await api('GET', `/api/agendamentos?inicio=${inicioISO}&fim=${fimISO}`);
+  let [agendamentosMes, bloqueiosMes] = await Promise.all([
+    api('GET', `/api/agendamentos?inicio=${inicioISO}&fim=${fimISO}`),
+    api('GET', `/api/bloqueios?inicio=${inicioISO}&fim=${fimISO}`),
+  ]);
   if (estado.filtroProfissionalId) {
     agendamentosMes = agendamentosMes.filter((a) => a.profissional_id === estado.filtroProfissionalId);
+    bloqueiosMes = bloqueiosMes.filter((b) => b.profissional_id === estado.filtroProfissionalId);
   }
 
   const porDia = new Map();
   for (const ag of agendamentosMes) {
     if (!porDia.has(ag.data)) porDia.set(ag.data, []);
     porDia.get(ag.data).push(ag);
+  }
+
+  const bloqueiosPorDia = new Map();
+  for (const b of bloqueiosMes) {
+    if (!bloqueiosPorDia.has(b.data)) bloqueiosPorDia.set(b.data, []);
+    bloqueiosPorDia.get(b.data).push(b);
   }
 
   const calendario = document.createElement('div');
@@ -270,15 +280,27 @@ async function renderAgenda() {
   for (const celula of celulas) {
     const iso = paraISO(celula.data);
     const agsDoDia = (porDia.get(iso) || []).sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
+    const bloqueiosDoDia = bloqueiosPorDia.get(iso) || [];
 
     const diaEl = document.createElement('div');
     diaEl.className =
-      'dia-mes' + (celula.foraDoMes ? ' dia-mes--fora' : '') + (iso === hojeISO ? ' dia-mes--hoje' : '');
+      'dia-mes' +
+      (celula.foraDoMes ? ' dia-mes--fora' : '') +
+      (iso === hojeISO ? ' dia-mes--hoje' : '') +
+      (bloqueiosDoDia.length > 0 ? ' dia-mes--bloqueado' : '');
 
     const numero = document.createElement('div');
     numero.className = 'dia-mes__numero';
     numero.textContent = celula.data.getDate();
     diaEl.appendChild(numero);
+
+    if (bloqueiosDoDia.length > 0) {
+      const selo = document.createElement('div');
+      selo.className = 'dia-mes__bloqueio';
+      selo.title = bloqueiosDoDia.map((b) => `${b.profissional_nome} indisponível${b.motivo ? ` — ${b.motivo}` : ''}`).join('\n');
+      selo.textContent = '🚫';
+      diaEl.appendChild(selo);
+    }
 
     if (agsDoDia.length > 0) {
       const pontos = document.createElement('div');
@@ -298,7 +320,7 @@ async function renderAgenda() {
       diaEl.appendChild(contagem);
     }
 
-    diaEl.onclick = () => abrirModalDiaDetalhe(iso, agsDoDia);
+    diaEl.onclick = () => abrirModalDiaDetalhe(iso, agsDoDia, bloqueiosDoDia);
     calendario.appendChild(diaEl);
   }
 
@@ -317,12 +339,40 @@ function criarChipProfissional(id, nome, cor) {
   return chip;
 }
 
-function abrirModalDiaDetalhe(dataISO, agendamentosDoDia) {
+function abrirModalDiaDetalhe(dataISO, agendamentosDoDia, bloqueiosDoDia = []) {
   const container = document.createElement('div');
+
+  const profissionaisBloqueadosIds = new Set(bloqueiosDoDia.map((b) => b.profissional_id));
+  const todosBloqueados =
+    estado.profissionais.length > 0 && estado.profissionais.every((p) => profissionaisBloqueadosIds.has(p.id));
+  const profissionaisDisponiveis = estado.profissionais.filter((p) => !profissionaisBloqueadosIds.has(p.id));
+
+  if (bloqueiosDoDia.length > 0) {
+    const avisos = document.createElement('div');
+    avisos.className = 'dia-detalhe__avisos';
+    for (const b of bloqueiosDoDia) {
+      const aviso = document.createElement('div');
+      aviso.className = 'aviso-bloqueio';
+      aviso.innerHTML = `
+        <span class="aviso-bloqueio__texto">🚫 <strong>${escapeHtml(b.profissional_nome)}</strong> indisponível neste dia${b.motivo ? ' — ' + escapeHtml(b.motivo) : ''}</span>
+        <button type="button" class="btn btn--sm" data-id="${b.id}">Desbloquear</button>
+      `;
+      aviso.querySelector('button').onclick = async () => {
+        await api('DELETE', `/api/bloqueios/${b.id}`);
+        fecharModal();
+        renderAgenda();
+      };
+      avisos.appendChild(aviso);
+    }
+    container.appendChild(avisos);
+  }
 
   const cabecalho = document.createElement('div');
   cabecalho.className = 'dia-detalhe__cabecalho';
-  cabecalho.innerHTML = `<button class="btn btn--primary" id="btn-agendar-neste-dia"><span aria-hidden="true">+</span> Agendar neste dia</button>`;
+  cabecalho.innerHTML = `
+    ${profissionaisDisponiveis.length > 0 ? `<button type="button" class="btn btn--perigo btn--sm" id="btn-bloquear-dia">🚫 Bloquear dia</button>` : ''}
+    <button type="button" class="btn btn--primary" id="btn-agendar-neste-dia" ${todosBloqueados ? 'disabled title="Nenhum profissional disponível neste dia."' : ''}><span aria-hidden="true">+</span> Agendar neste dia</button>
+  `;
   container.appendChild(cabecalho);
 
   const lista = document.createElement('div');
@@ -375,8 +425,73 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia) {
     { classe: 'modal--agenda-dia', subtitulo }
   );
 
-  container.querySelector('#btn-agendar-neste-dia').onclick = () => {
-    abrirModalAgendamento(null, null, dataISO, true);
+  if (!todosBloqueados) {
+    container.querySelector('#btn-agendar-neste-dia').onclick = () => {
+      abrirModalAgendamento(null, null, dataISO, true);
+    };
+  }
+
+  const btnBloquearDia = container.querySelector('#btn-bloquear-dia');
+  if (btnBloquearDia) {
+    btnBloquearDia.onclick = () => abrirModalBloqueio(dataISO, profissionaisDisponiveis, agendamentosDoDia);
+  }
+}
+
+function abrirModalBloqueio(dataISO, profissionaisDisponiveis, agendamentosDoDia) {
+  const form = document.createElement('form');
+
+  const opcoesProfissionais = profissionaisDisponiveis
+    .map((p) => `<option value="${p.id}">${escapeHtml(p.nome)}</option>`)
+    .join('');
+
+  form.innerHTML = `
+    <div class="campo">
+      <label>Profissional</label>
+      <select name="profissional_id" required>${opcoesProfissionais}</select>
+    </div>
+    <div class="campo">
+      <label>Motivo (opcional)</label>
+      <textarea name="motivo" placeholder="Ex: Congresso, folga, compromisso pessoal..."></textarea>
+    </div>
+    <div class="modal__acoes">
+      <button type="button" class="btn" id="btn-cancelar-bloqueio">Fechar</button>
+      <button type="submit" class="btn btn--perigo">Bloquear dia</button>
+    </div>
+  `;
+
+  abrirModal('Bloquear dia na agenda', form, {
+    classe: 'modal--formulario',
+    subtitulo: formatarDataLonga(new Date(dataISO + 'T00:00:00')),
+  });
+
+  form.querySelector('#btn-cancelar-bloqueio').onclick = fecharModal;
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const antigo = form.querySelector('.mensagem-erro');
+    if (antigo) antigo.remove();
+
+    const fd = new FormData(form);
+    const dados = Object.fromEntries(fd.entries());
+    dados.profissional_id = Number(dados.profissional_id);
+    dados.data = dataISO;
+
+    const profissional = estado.profissionais.find((p) => p.id === dados.profissional_id);
+    const jaMarcados = agendamentosDoDia.filter((a) => a.profissional_id === dados.profissional_id);
+    if (jaMarcados.length > 0) {
+      const confirmado = confirm(
+        `${profissional?.nome || 'Este profissional'} já tem ${jaMarcados.length} agendamento(s) neste dia. Bloquear mesmo assim?`
+      );
+      if (!confirmado) return;
+    }
+
+    try {
+      await api('POST', '/api/bloqueios', dados);
+      fecharModal();
+      renderAgenda();
+    } catch (err) {
+      form.prepend(elMensagemErro(err.message));
+    }
   };
 }
 

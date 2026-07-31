@@ -24,6 +24,10 @@ const rotas = [
   { metodo: 'DELETE', padrao: /^\/api\/agendamentos\/(?<id>\d+)$/, fn: api.removerAgendamento },
 
   { metodo: 'GET', padrao: /^\/api\/fechamento$/, fn: api.listarFechamento, admin: true },
+
+  { metodo: 'GET', padrao: /^\/api\/bloqueios$/, fn: api.listarBloqueios },
+  { metodo: 'POST', padrao: /^\/api\/bloqueios$/, fn: api.criarBloqueio },
+  { metodo: 'DELETE', padrao: /^\/api\/bloqueios\/(?<id>\d+)$/, fn: api.removerBloqueio },
 ];
 
 async function lerCorpo(req) {
