@@ -598,15 +598,20 @@ button, input, select, textarea {
   height: 30px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
 
-.btn-remarcar:hover { background: var(--card-alt); border-color: var(--azul); }
+.btn-remarcar svg { width: 15px; height: 15px; }
+
+.btn-remarcar:hover {
+  background: var(--card-alt);
+  border-color: var(--azul);
+  transform: rotate(45deg);
+}
 
 .dia-detalhe__vazio {
   text-align: center;
