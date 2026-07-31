@@ -404,9 +404,16 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia, bloqueiosDoDia = []) {
             ${ag.valor ? formatarMoeda(ag.valor) + ' · ' : ''}${ehConvenio ? 'Convênio' + (ag.paciente_convenio_nome ? ' (' + escapeHtml(ag.paciente_convenio_nome) + ')' : '') : 'Particular'}
           </div>
         </div>
-        <span class="badge badge-${ag.status}">${STATUS_LABEL[ag.status]}</span>
+        <div class="dia-detalhe__acoes">
+          <span class="badge badge-${ag.status}">${STATUS_LABEL[ag.status]}</span>
+          <button type="button" class="btn-remarcar" title="Remarcar para outro dia" aria-label="Remarcar para outro dia">🔁</button>
+        </div>
       `;
       item.onclick = () => abrirModalAgendamento(ag);
+      item.querySelector('.btn-remarcar').onclick = (e) => {
+        e.stopPropagation();
+        abrirModalRemarcar(ag);
+      };
       lista.appendChild(item);
     }
   }
@@ -435,6 +442,66 @@ function abrirModalDiaDetalhe(dataISO, agendamentosDoDia, bloqueiosDoDia = []) {
   if (btnBloquearDia) {
     btnBloquearDia.onclick = () => abrirModalBloqueio(dataISO, profissionaisDisponiveis, agendamentosDoDia);
   }
+}
+
+function abrirModalRemarcar(agendamento) {
+  const form = document.createElement('form');
+  form.innerHTML = `
+    <div class="linha-campos">
+      <div class="campo">
+        <label>Nova data</label>
+        <input type="date" name="data" value="${agendamento.data}" required />
+      </div>
+      <div class="campo">
+        <label>Novo horário</label>
+        <div class="autocomplete" id="autocomplete-hora-remarcar">
+          <input
+            type="text"
+            name="hora_inicio"
+            id="input-hora-remarcar"
+            placeholder="Ex: 14:00"
+            inputmode="numeric"
+            maxlength="5"
+            pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+            title="Use o formato HH:MM"
+            autocomplete="off"
+            value="${agendamento.hora_inicio.slice(0, 5)}"
+            required
+          />
+          <div class="autocomplete__lista" id="lista-hora-remarcar" hidden></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal__acoes">
+      <button type="button" class="btn" id="btn-cancelar-remarcar">Cancelar</button>
+      <button type="submit" class="btn btn--primary">Confirmar remarcação</button>
+    </div>
+  `;
+
+  abrirModal('🔁 Remarcar agendamento', form, {
+    classe: 'modal--formulario',
+    subtitulo: `${escapeHtml(agendamento.paciente_nome)} · atualmente em ${formatarDataLonga(new Date(agendamento.data + 'T00:00:00'))} às ${agendamento.hora_inicio.slice(0, 5)}`,
+  });
+
+  form.querySelector('#btn-cancelar-remarcar').onclick = fecharModal;
+  configurarSeletorHora(form.querySelector('#input-hora-remarcar'), form.querySelector('#lista-hora-remarcar'));
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const antigo = form.querySelector('.mensagem-erro');
+    if (antigo) antigo.remove();
+
+    const fd = new FormData(form);
+    const dados = Object.fromEntries(fd.entries());
+
+    try {
+      await api('PUT', `/api/agendamentos/${agendamento.id}`, dados);
+      fecharModal();
+      renderAgenda();
+    } catch (err) {
+      form.prepend(elMensagemErro(err.message));
+    }
+  };
 }
 
 function abrirModalBloqueio(dataISO, profissionaisDisponiveis, agendamentosDoDia) {
@@ -517,6 +584,61 @@ function gerarHorariosPadrao(passoMin = 15, inicio = '07:00', fim = '20:45') {
 }
 
 const HORARIOS_PADRAO = gerarHorariosPadrao();
+
+function configurarSeletorHora(inputHora, listaHoras) {
+  let indiceAtivo = -1;
+
+  function renderizarLista(filtro) {
+    const termo = (filtro || '').replace(/[^0-9:]/g, '');
+    const resultados = (termo ? HORARIOS_PADRAO.filter((h) => h.startsWith(termo)) : HORARIOS_PADRAO).slice(0, 8);
+
+    indiceAtivo = -1;
+    listaHoras.innerHTML =
+      resultados.length === 0
+        ? '<div class="autocomplete__vazio">Nenhum horário encontrado.</div>'
+        : resultados.map((h) => `<div class="autocomplete__item">${h}</div>`).join('');
+
+    const itens = listaHoras.querySelectorAll('.autocomplete__item');
+    itens.forEach((item, i) => {
+      item.onclick = () => {
+        inputHora.value = resultados[i];
+        listaHoras.hidden = true;
+      };
+    });
+    listaHoras.hidden = false;
+  }
+
+  function destacar() {
+    const itens = [...listaHoras.querySelectorAll('.autocomplete__item')];
+    itens.forEach((item, i) => item.classList.toggle('is-ativo', i === indiceAtivo));
+    itens[indiceAtivo]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  inputHora.addEventListener('input', () => renderizarLista(inputHora.value));
+  inputHora.addEventListener('focus', () => renderizarLista(inputHora.value));
+  inputHora.addEventListener('keydown', (e) => {
+    const itens = listaHoras.querySelectorAll('.autocomplete__item');
+    if (listaHoras.hidden || itens.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      indiceAtivo = Math.min(indiceAtivo + 1, itens.length - 1);
+      destacar();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      indiceAtivo = Math.max(indiceAtivo - 1, 0);
+      destacar();
+    } else if (e.key === 'Enter' && indiceAtivo >= 0) {
+      e.preventDefault();
+      itens[indiceAtivo].click();
+    } else if (e.key === 'Escape') {
+      listaHoras.hidden = true;
+    }
+  });
+  listaHoras.addEventListener('mousedown', (e) => e.preventDefault());
+  inputHora.addEventListener('blur', () => {
+    listaHoras.hidden = true;
+  });
+}
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -713,60 +835,7 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
     listaAutocomplete.hidden = true;
   });
 
-  const inputHora = form.querySelector('#input-hora-agendamento');
-  const listaHoras = form.querySelector('#lista-autocomplete-hora');
-  let indiceAtivoHora = -1;
-
-  function renderizarListaHoras(filtro) {
-    const termo = (filtro || '').replace(/[^0-9:]/g, '');
-    const resultados = (termo ? HORARIOS_PADRAO.filter((h) => h.startsWith(termo)) : HORARIOS_PADRAO).slice(0, 8);
-
-    indiceAtivoHora = -1;
-    listaHoras.innerHTML =
-      resultados.length === 0
-        ? '<div class="autocomplete__vazio">Nenhum horário encontrado.</div>'
-        : resultados.map((h) => `<div class="autocomplete__item">${h}</div>`).join('');
-
-    const itens = listaHoras.querySelectorAll('.autocomplete__item');
-    itens.forEach((item, i) => {
-      item.onclick = () => {
-        inputHora.value = resultados[i];
-        listaHoras.hidden = true;
-      };
-    });
-    listaHoras.hidden = false;
-  }
-
-  function destacarItemHora() {
-    const itens = [...listaHoras.querySelectorAll('.autocomplete__item')];
-    itens.forEach((item, i) => item.classList.toggle('is-ativo', i === indiceAtivoHora));
-    itens[indiceAtivoHora]?.scrollIntoView({ block: 'nearest' });
-  }
-
-  inputHora.addEventListener('input', () => renderizarListaHoras(inputHora.value));
-  inputHora.addEventListener('focus', () => renderizarListaHoras(inputHora.value));
-  inputHora.addEventListener('keydown', (e) => {
-    const itens = listaHoras.querySelectorAll('.autocomplete__item');
-    if (listaHoras.hidden || itens.length === 0) return;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      indiceAtivoHora = Math.min(indiceAtivoHora + 1, itens.length - 1);
-      destacarItemHora();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      indiceAtivoHora = Math.max(indiceAtivoHora - 1, 0);
-      destacarItemHora();
-    } else if (e.key === 'Enter' && indiceAtivoHora >= 0) {
-      e.preventDefault();
-      itens[indiceAtivoHora].click();
-    } else if (e.key === 'Escape') {
-      listaHoras.hidden = true;
-    }
-  });
-  listaHoras.addEventListener('mousedown', (e) => e.preventDefault());
-  inputHora.addEventListener('blur', () => {
-    listaHoras.hidden = true;
-  });
+  configurarSeletorHora(form.querySelector('#input-hora-agendamento'), form.querySelector('#lista-autocomplete-hora'));
 
   form.querySelector('#btn-novo-paciente-inline').onclick = () => {
     abrirModalPaciente(null, async (pacienteCriado) => {
