@@ -110,7 +110,6 @@ if (temUsuario === 0) {
   }
   console.log('');
 } else if (process.env.ADMIN_SENHA_INICIAL) {
-  console.log('[DEBUG] ADMIN_SENHA_INICIAL =', JSON.stringify(process.env.ADMIN_SENHA_INICIAL));
   // Usuário admin já existe: se ADMIN_SENHA_INICIAL foi definida/alterada,
   // sincroniza a senha dele com o valor da variável (permite redefinir a
   // senha só trocando essa env var e fazendo redeploy).

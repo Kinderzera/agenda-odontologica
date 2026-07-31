@@ -57,15 +57,8 @@ function atributosCookie(valor) {
 
 export async function login(req, res) {
   const { usuario = '', senha = '' } = req.json ?? {};
-  console.log('[DEBUG login] req.json =', JSON.stringify(req.json));
-  console.log('[DEBUG login] usuario =', JSON.stringify(usuario), 'senha.length =', senha.length);
   const linhas = await sql.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
-  console.log('[DEBUG login] linhas.length =', linhas.length);
   const registro = linhas[0];
-  if (registro) {
-    console.log('[DEBUG login] registro.salt =', registro.salt, 'hash.len=', registro.senha_hash?.length);
-    console.log('[DEBUG login] confere =', senhaConfere(senha, registro.salt, registro.senha_hash));
-  }
   if (!registro || !senhaConfere(senha, registro.salt, registro.senha_hash)) {
     res.status = 401;
     res.body = { erro: 'Usuário ou senha inválidos.' };
