@@ -454,6 +454,29 @@ button, input, select, textarea {
   color: var(--azul-claro);
 }
 
+.dia-mes--fechado {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--painel) 0px,
+    var(--painel) 8px,
+    var(--card) 8px,
+    var(--card) 16px
+  );
+  cursor: not-allowed;
+}
+.dia-mes--fechado:hover { background: var(--painel); box-shadow: none; }
+.dia-mes--fechado .dia-mes__numero { color: var(--texto-fraco); }
+.dia-mes--fechado.dia-mes--fora { opacity: 0.6; }
+
+.dia-mes__fechado {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--texto-fraco);
+  margin-top: auto;
+}
+
 .dia-mes--bloqueado {
   background: repeating-linear-gradient(
     135deg,

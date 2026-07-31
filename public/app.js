@@ -287,18 +287,28 @@ async function renderAgenda() {
     const iso = paraISO(celula.data);
     const agsDoDia = (porDia.get(iso) || []).sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
     const bloqueiosDoDia = bloqueiosPorDia.get(iso) || [];
+    const fimDeSemana = [0, 6].includes(celula.data.getDay());
 
     const diaEl = document.createElement('div');
     diaEl.className =
       'dia-mes' +
       (celula.foraDoMes ? ' dia-mes--fora' : '') +
       (iso === hojeISO ? ' dia-mes--hoje' : '') +
+      (fimDeSemana ? ' dia-mes--fechado' : '') +
       (bloqueiosDoDia.length > 0 ? ' dia-mes--bloqueado' : '');
+    if (fimDeSemana) diaEl.title = 'A clínica não atende aos sábados e domingos.';
 
     const numero = document.createElement('div');
     numero.className = 'dia-mes__numero';
     numero.textContent = celula.data.getDate();
     diaEl.appendChild(numero);
+
+    if (fimDeSemana) {
+      const fechado = document.createElement('div');
+      fechado.className = 'dia-mes__fechado';
+      fechado.textContent = 'Fechado';
+      diaEl.appendChild(fechado);
+    }
 
     if (bloqueiosDoDia.length > 0) {
       const selo = document.createElement('div');
