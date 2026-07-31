@@ -49,54 +49,39 @@ button, input, select, textarea {
 
 .login__marca {
   position: relative;
+  min-height: 58vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 28px;
-  padding: 28px 24px 40px;
+  justify-content: flex-end;
+  align-items: flex-start;
+  text-align: left;
+  padding: 24px;
   overflow: hidden;
   background: var(--bg);
 }
 
-.login__marca-fundo {
+.login__marca-foto {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: radial-gradient(ellipse 70% 55% at 50% 12%, rgba(34, 170, 212, 0.18), transparent 65%);
-}
-
-.login__marca-conteudo {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 22px;
-  width: 100%;
-}
-
-.login__marca-foto-frame {
-  width: min(64vw, 280px);
-  aspect-ratio: 3 / 4;
-  border-radius: 20px;
-  overflow: hidden;
-  background: var(--card);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.07);
-}
-
-.login__marca-foto-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 15%;
-  display: block;
+  object-position: 52% 18%;
+}
+
+.login__marca-sombra {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--bg) 2%, rgba(6, 10, 16, 0.8) 30%, rgba(6, 10, 16, 0.2) 60%, transparent 80%);
 }
 
 .login__marca-texto {
   position: relative;
   z-index: 2;
-  max-width: 340px;
+  max-width: 92%;
 }
 
 .logo-icone {
@@ -109,18 +94,23 @@ button, input, select, textarea {
 }
 
 .login__logo {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  z-index: 3;
+  top: 20px;
+  left: 20px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--borda);
-  background: var(--painel);
+  border: 1px solid rgba(231, 237, 243, 0.14);
+  background: rgba(6, 10, 16, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 9px 16px;
   border-radius: 999px;
   font-weight: 700;
   font-size: 13px;
   color: var(--texto);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
 .login__titulo {
@@ -1147,10 +1137,17 @@ button, input, select, textarea {
   }
   .login__marca {
     flex: 1 1 50%;
-    justify-content: center;
-    padding: 6vw;
+    min-height: auto;
+    justify-content: flex-end;
+    padding: 0 6vw 72px;
   }
-  .login__marca-foto-frame { width: min(320px, 30vw); }
+  .login__marca-foto { object-position: 62% 12%; }
+  .login__marca-sombra {
+    background:
+      linear-gradient(0deg, var(--bg) 0%, rgba(6, 10, 16, 0.8) 32%, rgba(6, 10, 16, 0.22) 62%, transparent 100%),
+      linear-gradient(90deg, var(--bg) 0%, rgba(6, 10, 16, 0.55) 22%, transparent 55%);
+  }
+  .login__logo { top: 28px; left: 6vw; }
   .login__marca-texto { max-width: 380px; }
   .login__titulo { font-size: clamp(24px, 2vw, 30px); }
   .login__subtitulo { font-size: 17px; }
