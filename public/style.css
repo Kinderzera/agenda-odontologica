@@ -795,9 +795,15 @@ button, input, select, textarea {
 
 .linha-campos {
   display: flex;
-  gap: 10px;
+  gap: 14px;
 }
-.linha-campos .campo { flex: 1; }
+.linha-campos .campo { flex: 1; min-width: 0; }
+
+.campo__acao-inline {
+  margin-top: 8px;
+}
+
+.modal--formulario { max-width: 560px; }
 
 .modal__acoes {
   display: flex;
@@ -914,6 +920,7 @@ button, input, select, textarea {
   }
   .modal::before { border-radius: 20px 20px 0 0; }
   .modal--agenda-dia { max-width: 640px; }
+  .modal--formulario { max-width: 660px; }
   .dia-mes { min-height: 118px; padding: 10px 12px; }
   .dia-mes__numero { font-size: 14px; }
   .calendario-mes__cabecalho { padding: 14px 4px; font-size: 12px; }

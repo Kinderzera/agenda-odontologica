@@ -426,19 +426,19 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
     .join('');
 
   form.innerHTML = `
-    <div class="campo">
-      <label>Paciente</label>
-      <select name="paciente_id" required>
-        <option value="">Selecione...</option>
-        ${opcoesPacientes}
-      </select>
-    </div>
-    <div class="campo">
-      <button type="button" class="btn btn--sm" id="btn-novo-paciente-inline">+ Novo paciente</button>
-    </div>
-    <div class="campo">
-      <label>Profissional</label>
-      <select name="profissional_id" required>${opcoesProfissionais}</select>
+    <div class="linha-campos">
+      <div class="campo">
+        <label>Paciente</label>
+        <select name="paciente_id" required>
+          <option value="">Selecione...</option>
+          ${opcoesPacientes}
+        </select>
+        <button type="button" class="btn btn--sm campo__acao-inline" id="btn-novo-paciente-inline">+ Novo paciente</button>
+      </div>
+      <div class="campo">
+        <label>Profissional</label>
+        <select name="profissional_id" required>${opcoesProfissionais}</select>
+      </div>
     </div>
     <div class="linha-campos">
       <div class="campo">
@@ -482,7 +482,7 @@ function abrirModalAgendamento(agendamento = null, horaSugerida = null, dataSuge
     </div>
   `;
 
-  abrirModal(editando ? 'Editar agendamento' : 'Novo agendamento', form);
+  abrirModal(editando ? 'Editar agendamento' : 'Novo agendamento', form, { classe: 'modal--formulario' });
 
   form.querySelector('#btn-cancelar-modal').onclick = fecharModal;
 
@@ -647,7 +647,7 @@ function abrirModalPaciente(paciente = null, aoSalvar = null) {
     </div>
   `;
 
-  abrirModal(editando ? 'Editar paciente' : 'Novo paciente', form);
+  abrirModal(editando ? 'Editar paciente' : 'Novo paciente', form, { classe: 'modal--formulario' });
   form.querySelector('#btn-cancelar-modal').onclick = fecharModal;
 
   form.querySelector('#campo-tipo-atendimento').onchange = (e) => {
@@ -742,7 +742,7 @@ function abrirModalProfissional(profissional = null) {
     </div>
   `;
 
-  abrirModal(editando ? 'Editar profissional' : 'Novo profissional', form);
+  abrirModal(editando ? 'Editar profissional' : 'Novo profissional', form, { classe: 'modal--formulario' });
   form.querySelector('#btn-cancelar-modal').onclick = fecharModal;
 
   form.onsubmit = async (e) => {
