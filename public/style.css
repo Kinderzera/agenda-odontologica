@@ -67,7 +67,7 @@ button, input, select, textarea {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 52% 18%;
+  object-position: 50% 38%;
 }
 
 .login__marca-sombra {
@@ -1141,7 +1141,7 @@ button, input, select, textarea {
     justify-content: flex-end;
     padding: 0 6vw 72px;
   }
-  .login__marca-foto { object-position: 62% 12%; }
+  .login__marca-foto { object-position: 58% 30%; }
   .login__marca-sombra {
     background:
       linear-gradient(0deg, var(--bg) 0%, rgba(6, 10, 16, 0.8) 32%, rgba(6, 10, 16, 0.22) 62%, transparent 100%),
