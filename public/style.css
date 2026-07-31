@@ -94,26 +94,6 @@ button, input, select, textarea {
   box-shadow: 0 0 0 1px rgba(79, 216, 240, 0.35);
 }
 
-.login__logo {
-  position: absolute;
-  z-index: 3;
-  top: 20px;
-  left: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid rgba(231, 237, 243, 0.14);
-  background: rgba(6, 10, 16, 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 9px 16px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--texto);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-}
-
 .login__titulo {
   font-size: clamp(18px, 5.5vw, 23px);
   letter-spacing: 0.2px;
@@ -1157,7 +1137,6 @@ button, input, select, textarea {
       linear-gradient(0deg, var(--bg) 0%, rgba(6, 10, 16, 0.8) 32%, rgba(6, 10, 16, 0.22) 62%, transparent 100%),
       linear-gradient(90deg, var(--bg) 0%, rgba(6, 10, 16, 0.55) 22%, transparent 55%);
   }
-  .login__logo { top: 28px; left: 6vw; }
   .login__marca-texto { max-width: 380px; }
   .login__titulo { font-size: clamp(24px, 2vw, 30px); }
   .login__subtitulo { font-size: 14px; }
