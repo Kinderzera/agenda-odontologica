@@ -12,7 +12,7 @@ If Not objFSO.FileExists(strEnvLocal) Then
 End If
 
 ' Sobe o servidor em segundo plano, sem abrir janela de terminal
-objShell.Run "cmd /c cd /d """ & strPasta & """ && """ & strNode & """ --env-file=.env.local servidor-local.js", 0, False
+objShell.Run "cmd /c cd /d """ & strPasta & """ && """ & strNode & """ --env-file=.env.local server.js", 0, False
 
 ' Da um tempo para o servidor iniciar antes de abrir o navegador
 WScript.Sleep 1500

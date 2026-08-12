@@ -11,5 +11,5 @@ if not exist ".env.local" (
   pause
   exit /b 1
 )
-node --env-file=.env.local servidor-local.js
+node --env-file=.env.local server.js
 pause

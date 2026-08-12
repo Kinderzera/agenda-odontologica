@@ -61,7 +61,7 @@ async function lerCorpo(req) {
 }
 
 // Trata qualquer requisição de /api/*. Funciona tanto com o http.createServer
-// local (servidor-local.js) quanto com uma serverless function do Vercel — os dois
+// local (server.js) quanto com uma serverless function do Vercel — os dois
 // usam objetos req/res compatíveis com o Node `http`.
 export async function tratarRequisicao(req, res) {
   const url = new URL(req.url, 'http://localhost');
